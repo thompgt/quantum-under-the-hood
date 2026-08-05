@@ -1,0 +1,3 @@
+# Notebooks carry committed outputs (that is the product). Suppress diff noise in PRs.
+*.ipynb -diff
+*.ipynb linguist-documentation=false
