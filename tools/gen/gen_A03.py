@@ -138,19 +138,19 @@ Section 7 is about why that phase is simultaneously invisible and important.
 ### Figure 1 — what unitarity buys you, and what its absence costs
 
 Left: apply a matrix to a state over and over and watch the norm. A unitary holds
-the norm at exactly 1 forever. A matrix that is merely *close* to unitary bleeds
-probability away geometrically — after twenty gates there is no state left. A
-random matrix does the opposite and blows up.
+it at exactly 1 forever. A matrix that is merely *close* to unitary drifts
+geometrically — $0.9H$ has bled away 88% of the state after twenty gates, and
+$1.1H$ has inflated it sevenfold. There is no "approximately conserved
+probability": the error compounds, and a circuit is thousands of gates long.
 
 Right: the unitarity defect $\|U^\dagger U - I\|_F$ for the standard gates and for
-two impostors, on a log axis. The real gates sit at $10^{-16}$ — floating-point
-dust — and the impostors sit fourteen orders of magnitude higher. This is not a
-close call, which is exactly why it makes a good assertion."""))
+three impostors, on a log axis. The real gates sit at $10^{-16}$ or below —
+floating-point dust — and the impostors sit fifteen orders of magnitude higher.
+This is not a close call, which is exactly why it makes a good assertion."""))
 
-cells.append(code(r'''# Two impostors: a shrunken Hadamard, and an unconstrained random matrix.
-SHRUNK = 0.9 * H
+cells.append(code(r'''# Three impostors: a shrunken and a stretched Hadamard, and a random matrix.
+SHRUNK, STRETCH = 0.9 * H, 1.1 * H
 RANDM = (rng.normal(size=(2, 2)) + 1j * rng.normal(size=(2, 2))) / 2
-PROJ = np.array([[1, 0], [0, 0]], dtype=complex)     # a measurement projector
 
 psi0 = np.array([1, 0], dtype=complex)
 ks = np.arange(0, 21)
@@ -158,6 +158,7 @@ ks = np.arange(0, 21)
 fig, axes = plt.subplots(1, 2, figsize=(11.0, 3.6))
 
 for name, M, col in [("H  (unitary)", H, style.BLUE),
+                     ("1.1 H", STRETCH, style.MAGENTA),
                      ("0.9 H", SHRUNK, style.ORANGE),
                      ("random 2x2", RANDM, style.AQUA)]:
     v = psi0.copy()
@@ -169,22 +170,25 @@ for name, M, col in [("H  (unitary)", H, style.BLUE),
 
 axes[0].axhline(1.0, color=style.MUTED, lw=0.9, ls=(0, (4, 3)), zorder=1)
 axes[0].set_yscale("log")
-axes[0].set_ylim(1e-3, 1e3)
+axes[0].set_ylim(3e-3, 3e2)
+axes[0].set_xlim(-0.6, 24.5)
+axes[0].set_xticks([0, 5, 10, 15, 20])
 axes[0].set_xlabel("gates applied")
 axes[0].set_ylabel(r"$\||\psi\rangle\|$")
 axes[0].set_title("Only a unitary conserves probability", loc="left", fontsize=10)
 axes[0].legend(loc="lower left")
-grid.annotate(axes[0], "state has evaporated", xy=(20, 0.9 ** 20),
-              xytext=(9.0, 6e-3))
+for lab, y in [("blows up", 1.1 ** 20), ("evaporates", 0.9 ** 20)]:
+    axes[0].text(20.6, y, lab, fontsize=8, color=style.MUTED, va="center")
 
-cands = GATES + [("0.9H", SHRUNK), ("rand", RANDM), ("proj", PROJ)]
-defects = [max(np.linalg.norm(dag(M) @ M - I2), 1e-17) for _, M in cands]
+cands = GATES + [("0.9H", SHRUNK), ("1.1H", STRETCH), ("rand", RANDM)]
+FLOOR = 3e-17     # exact-zero defects are drawn on the floor so the bar is seen
+defects = [max(np.linalg.norm(dag(M) @ M - I2), FLOOR) for _, M in cands]
 cols = [style.BLUE] * len(GATES) + [style.RED] * 3
 axes[1].bar(range(len(cands)), defects, color=cols, width=0.7, zorder=3)
 axes[1].set_yscale("log")
-axes[1].set_ylim(1e-17, 1e2)
+axes[1].set_ylim(1e-18, 1e2)
 axes[1].axhline(1e-12, color=style.MUTED, lw=0.9, ls=(0, (4, 3)), zorder=2)
-axes[1].text(0.02, 1.6e-12, "numerical zero", fontsize=8, color=style.MUTED,
+axes[1].text(0.02, 2e-12, "numerical zero", fontsize=8, color=style.MUTED,
              va="bottom")
 axes[1].set_xticks(range(len(cands)))
 axes[1].set_xticklabels([n for n, _ in cands], fontsize=8.5)
@@ -386,15 +390,19 @@ no measurement can see. Same story for $Y$, $Z$, and — with the tilted axis �
 $H$. Let's confirm the whole family at once."""))
 
 cells.append(code(r'''def same_up_to_phase(A, B, tol=1e-10):
-    """True if A = e^{i phi} B for some real phi. Compares the two matrices
-    after dividing out the phase of the largest-magnitude entry of each."""
+    """True if A = e^{i phi} B for some real phi.
+
+    The overlap Tr(A-dagger B) equals e^{-i phi} ||B||^2 when the two differ
+    only by a phase, so its argument hands us phi directly. (Comparing the
+    largest entry of each matrix instead is tempting and wrong: |1| and
+    |e^{i pi/4}| are the same number in exact arithmetic but not in floating
+    point, so the two matrices can pick different reference entries.)
+    """
     A, B = np.asarray(A), np.asarray(B)
-    ia = np.unravel_index(np.argmax(np.abs(A)), A.shape)
-    ib = np.unravel_index(np.argmax(np.abs(B)), B.shape)
-    if abs(A[ia]) < tol or abs(B[ib]) < tol:
-        return np.allclose(A, B, atol=tol)
-    return np.allclose(A * np.exp(-1j * np.angle(A[ia])),
-                       B * np.exp(-1j * np.angle(B[ib])), atol=tol)
+    overlap = np.trace(dag(A) @ B)
+    if abs(overlap) < tol:
+        return False
+    return np.allclose(A * np.exp(1j * np.angle(overlap)), B, atol=tol)
 
 
 n_h = np.array([1.0, 0.0, 1.0]) / np.sqrt(2)
@@ -419,11 +427,12 @@ print(f"{'gate':>5}  {'is this rotation':<32} {'same up to global phase?':>25}")
 for name, G, R, desc in claims:
     print(f"{name:>5}  {desc:<32} {str(same_up_to_phase(G, R)):>25}")
 
-print("\nThe leftover phases (gate / rotation), which nothing can measure:")
+print("\nThe leftover phases (gate = e^{i phi} x rotation), which nothing"
+      " can measure:")
 for name, G, R, _ in claims:
-    ph = G[np.unravel_index(np.argmax(np.abs(R)), R.shape)] / \
-        R[np.unravel_index(np.argmax(np.abs(R)), R.shape)]
-    print(f"  {name}: {ph.real:+.4f}{ph.imag:+.4f}j")'''))
+    phi = -np.angle(np.trace(dag(G) @ R))
+    print(f"  {name}: e^(i phi) with phi = {phi/np.pi:+.4f} pi"
+          f"   -> {np.exp(1j*phi).real:+.4f}{np.exp(1j*phi).imag:+.4f}j")'''))
 
 # ----------------------------------------------------------- bloch machinery
 cells.append(md(r"""## 4. From matrix to rotation, explicitly
@@ -521,6 +530,32 @@ cells.append(code(r'''def rodrigues(nvec, t, v):
             + nvec * np.dot(nvec, v) * (1 - np.cos(t)))
 
 
+def bloch_frame(ax, labels=True, zoom=1.5):
+    """A Bloch sphere drawn as an outline rather than a translucent ball.
+
+    Two reasons. Visually, an outline keeps 16 small panels from turning into
+    mud. Practically, a shaded surface is a smooth gradient across thousands of
+    pixels and roughly doubles the PNG - and this repo has a size budget, since
+    every notebook ships with its outputs committed.
+
+    The rim is the sphere's silhouette: the great circle perpendicular to the
+    viewing direction (elev=18, azim=32, matching qviz.bloch's fixed camera).
+    """
+    bloch.sphere(ax, labels=labels, wire=False, alpha=0.0)
+    e, a = np.deg2rad(18.0), np.deg2rad(32.0)
+    view = np.array([np.cos(e) * np.cos(a), np.cos(e) * np.sin(a), np.sin(e)])
+    u1 = np.cross(view, [0.0, 0.0, 1.0])
+    u1 = u1 / np.linalg.norm(u1)
+    u2 = np.cross(view, u1)
+    t = np.linspace(0, 2 * np.pi, 160)
+    p = np.outer(np.cos(t), u1) + np.outer(np.sin(t), u2)
+    ax.plot(p[:, 0], p[:, 1], p[:, 2], color=style.AXIS, lw=1.1, zorder=1)
+    # 3D axes leave a wide default margin around the cube; zooming fills the
+    # panel, which is also what pulls the six ket labels apart into legibility.
+    ax.set_box_aspect((1, 1, 1), zoom=zoom)
+    return ax
+
+
 panels = [
     (r"$R_x(\pi/2)$ — axis $\hat{x}$", Rx(np.pi / 2), np.array([0., 0., 1.])),
     (r"$R_y(\pi/2)$ — axis $\hat{y}$", Ry(np.pi / 2), np.array([0., 0., 1.])),
@@ -528,9 +563,9 @@ panels = [
     (r"$H$ — axis $(\hat{x}+\hat{z})/\sqrt{2}$", H, np.array([0., 0., 1.])),
 ]
 
-fig, axes = grid.frames(4, ncols=4, panel=(2.85, 3.05), projection="3d")
+fig, axes = grid.frames(4, ncols=4, panel=(3.0, 3.20), projection="3d")
 for ax, (title, U, r0) in zip(axes, panels):
-    bloch.sphere(ax, labels=True, wire=False, alpha=0.05)
+    bloch_frame(ax, zoom=1.42)
     nv, th = axis_angle(U)
 
     # the rotation axis, drawn as a rod through the whole sphere
@@ -550,7 +585,7 @@ for ax, (title, U, r0) in zip(axes, panels):
     bloch.path(ax, arc, color=style.BLUE, lw=2.6)
     bloch.vector(ax, r0, color=style.MUTED, lw=1.8)
     bloch.vector(ax, rodrigues(nv, th, r0), color=style.ORANGE, lw=2.6)
-    bloch.label(ax, title + f"\nangle = {th/np.pi:.2f}" + r"$\pi$", y=0.02,
+    bloch.label(ax, title + f"\nangle = {th/np.pi:.2f}" + r"$\pi$", y=0.07,
                 size=9.0)
 
 fig.suptitle("Every gate is a rotation: axis (violet), orbit (dashed), "
@@ -593,19 +628,19 @@ trail = np.array([bloch_vector(Rx(t) @ ket0) for t in fine])
 full_orbit = np.array([bloch_vector(Rx(t) @ ket0)
                        for t in np.linspace(0, 2 * np.pi, 200)])
 
-fig, axes = grid.frames(16, ncols=4, panel=(2.0, 2.15), projection="3d")
+fig, axes = grid.frames(16, ncols=4, panel=(2.15, 2.15), projection="3d")
 for k, (ax, th) in enumerate(zip(axes, thetas)):
-    bloch.sphere(ax, labels=False, wire=False, alpha=0.05)
+    bloch_frame(ax, labels=False, zoom=1.62)
     ax.plot(full_orbit[:, 0], full_orbit[:, 1], full_orbit[:, 2],
             color=style.AXIS, lw=0.7, ls=(0, (3, 3)), zorder=3)
     upto = trail[fine <= th + 1e-9]
     if len(upto) > 1:
-        bloch.path(ax, upto, color=style.BLUE, lw=2.0)
+        bloch.path(ax, upto, color=style.BLUE, lw=2.2)
     st = Rx(th) @ ket0
     bloch.vector(ax, bloch_vector(st), color=style.ORANGE, lw=2.4)
     p1 = abs(st[1]) ** 2
-    bloch.label(ax, rf"$\theta={k}\pi/8$" + f"\nP(1) = {p1:.2f}", y=0.06,
-                size=8.5)
+    lab = r"$\theta=0$" if k == 0 else rf"$\theta={k}\pi/8$"
+    bloch.label(ax, lab + f"\nP(1) = {p1:.2f}", y=0.10, size=8.5)
 
 fig.suptitle(r"$|0\rangle$ under $R_x(\theta)$ — sixteen frames, fading trail",
              x=0.005, ha="left", fontsize=11.5)
@@ -696,26 +731,36 @@ commutator does not automatically mean a visible difference.** $X$ and $Z$
 anticommute, $XZ = -ZX$, so their commutator has norm 4 — the largest in the grid
 — and yet $XZ$ and $ZX$ differ only by $-1$, a global phase. They are the *same
 rotation of the sphere*. $R_x(\pi/2)$ and $R_z(\pi/2)$ are the honest example: the
-two orders land on genuinely different points."""))
+two orders land on genuinely different points.
+
+(The two Bloch panels start from a *generic* state rather than $|0\rangle$. The
+north pole lies on the $z$ axis, so $R_z$ would leave it exactly where it is and
+one of the two steps would be invisible — true, but a weaker demonstration.)"""))
 
 cells.append(code(r'''cnames = ["X", "Y", "Z", "H", "S", "T", r"$R_x$", r"$R_y$"]
 cmats = [X, Y, Z, H, S, T, Rx(np.pi / 3), Ry(np.pi / 3)]
 Cnorm = np.array([[np.linalg.norm(A @ B - B @ A) for B in cmats]
                   for A in cmats])
 
-fig = plt.figure(figsize=(12.2, 3.9))
-axc = fig.add_subplot(1, 3, 1)
-grid.matrix(axc, Cnorm, part="abs", labels=cnames, annot=True, fmt="{:.1f}")
-axc.set_title(r"$\|[A,B]\|_F$", loc="left", fontsize=10)
+fig = plt.figure(figsize=(12.2, 4.3))
+gs = fig.add_gridspec(1, 3, width_ratios=[1.15, 1.0, 1.0])
+axc = fig.add_subplot(gs[0, 0])
+grid.matrix(axc, Cnorm, part="abs", labels=cnames, annot=True, fmt="{:.1f}",
+            hide_zeros=False)   # 0 is the interesting value here, not clutter
+axc.set_title(r"$\|[A,B]\|_F$ — pale means the two commute", loc="left",
+              fontsize=10)
 
 A1, A2 = Rx(np.pi / 2), Rz(np.pi / 2)
+# Start from a generic state rather than |0>: the north pole sits ON the z axis,
+# so Rz would leave it fixed and one of the two steps would be invisible.
+start = Ry(np.pi / 3) @ ket0
 orders = [("first $R_x(\\pi/2)$, then $R_z(\\pi/2)$", (A1, A2)),
           ("first $R_z(\\pi/2)$, then $R_x(\\pi/2)$", (A2, A1))]
 
 for i, (title, (G1, G2)) in enumerate(orders):
-    ax = fig.add_subplot(1, 3, i + 2, projection="3d")
-    bloch.sphere(ax, labels=True, wire=False, alpha=0.05)
-    r0 = bloch_vector(ket0)
+    ax = fig.add_subplot(gs[0, i + 1], projection="3d")
+    bloch_frame(ax)
+    r0 = bloch_vector(start)
     n1, t1 = axis_angle(G1)
     mid = rodrigues(n1, t1, r0)
     n2, t2 = axis_angle(G2)
@@ -727,17 +772,16 @@ for i, (title, (G1, G2)) in enumerate(orders):
     bloch.path(ax, seg2, color=style.AQUA, lw=2.6, fade=False)
     bloch.vector(ax, r0, color=style.MUTED, lw=1.6)
     bloch.vector(ax, end, color=style.ORANGE, lw=2.8)
-    ax.text(end[0] * 1.30, end[1] * 1.30, end[2] * 1.30 + 0.12,
-            f"({end[0]:.0f}, {end[1]:.0f}, {end[2]:.0f})",
-            color=style.ORANGE, fontsize=8.5, ha="center")
-    bloch.label(ax, title, y=0.03, size=9.0)
+    coords = ", ".join(f"{c if abs(c) > 5e-3 else 0.0:+.2f}" for c in end)
+    bloch.label(ax, title + f"\nends at ({coords})", y=0.07, size=9.0)
 
 fig.suptitle("Gate order changes where you land", x=0.005, ha="left",
              fontsize=11.5)
 plt.show()
 
-print("Rx then Rz  ->", np.round(bloch_vector(A2 @ A1 @ ket0), 6))
-print("Rz then Rx  ->", np.round(bloch_vector(A1 @ A2 @ ket0), 6))
+print("start       ->", np.round(bloch_vector(start), 6))
+print("Rx then Rz  ->", np.round(bloch_vector(A2 @ A1 @ start), 6))
+print("Rz then Rx  ->", np.round(bloch_vector(A1 @ A2 @ start), 6))
 
 print("\nThe trap: X and Z anticommute, so the commutator is as big as it gets...")
 print("  ||[X,Z]||_F =", round(float(np.linalg.norm(X @ Z - Z @ X)), 6))
@@ -769,47 +813,77 @@ why "T-count" is the currency compiler papers actually optimise.
 
 None of that is visible in the matrix. It is a diagonal with one $45°$ phase in
 it. Which is a good reminder that the interesting content of a gate set is not in
-any one gate."""))
+any one gate.
+
+### Figure 6 — eight eighth-turns
+
+Left: $T^k|+\rangle$ for $k = 0\ldots 8$, marching round the equator in $45°$
+steps and closing the loop exactly.
+
+Right: the phase piled onto the $|1\rangle$ amplitude, as a function of $k$. Three
+straight lines whose slopes are $\pi/4$, $\pi/2$, $\pi$ — the rotation angles
+themselves. The hollow rings are what `np.angle` actually returns: the same
+quantity folded into $[0, 2\pi)$, because a phase is only ever knowable modulo
+$2\pi$. The filled line is the accumulation we *know* happened; the rings are all
+an experiment could ever see. Prising the unwrapped value back out of the wrapped
+one is, more or less, what quantum phase estimation is for."""))
 
 cells.append(code(r'''plus = np.array([1, 1], dtype=complex) / np.sqrt(2)
 steps = np.arange(9)
 
-fig = plt.figure(figsize=(11.2, 3.9))
+fig = plt.figure(figsize=(11.4, 4.1))
+gs6 = fig.add_gridspec(1, 2, width_ratios=[1.0, 1.55])
 
-axb = fig.add_subplot(1, 5, (1, 2), projection="3d")
-bloch.sphere(axb, labels=True, wire=False, alpha=0.05)
+axb = fig.add_subplot(gs6[0, 0], projection="3d")
+bloch_frame(axb)
 # T^k for fractional k is just Rz(k pi/4) - the continuous rotation T samples
 pts = np.array([bloch_vector(Rz(k * np.pi / 4) @ plus)
-                for k in np.linspace(0, 8, 200)])
-axb.plot(pts[:, 0], pts[:, 1], pts[:, 2], color=style.AXIS, lw=0.8,
-         ls=(0, (3, 3)), zorder=3)
+                for k in np.linspace(0, 8, 240)])
+bloch.path(axb, pts, color=style.BLUE, lw=2.2)
 marks = np.array([bloch_vector(np.linalg.matrix_power(T, k) @ plus)
                   for k in steps])
-bloch.path(axb, marks, color=style.BLUE, lw=2.4)
-axb.scatter(marks[:, 0], marks[:, 1], marks[:, 2], color=style.BLUE, s=22,
-            depthshade=False, zorder=6, edgecolors=style.SURFACE, linewidths=0.7)
-bloch.vector(axb, marks[0], color=style.MUTED, lw=1.8)
-bloch.vector(axb, marks[3], color=style.ORANGE, lw=2.4)
-bloch.label(axb, r"$T^k|+\rangle$ marches round the equator in 8 steps",
-            y=0.02, size=9.0)
+axb.scatter(marks[:, 0], marks[:, 1], marks[:, 2], color=style.BLUE, s=26,
+            depthshade=False, zorder=6, edgecolors=style.SURFACE, linewidths=0.8)
+bloch.vector(axb, marks[0], color=style.MUTED, lw=1.8, label="k=0")
+bloch.vector(axb, marks[3], color=style.ORANGE, lw=2.4, label="k=3")
+bloch.label(axb, r"$T^k|+\rangle$: eight steps round the equator",
+            y=0.06, size=9.0)
 
-axp = fig.add_subplot(1, 5, (3, 5))
-for name, G, col in [("T", T, style.BLUE), ("S", S, style.ORANGE),
-                     ("Z", Z, style.AQUA)]:
-    ph = np.unwrap([np.angle((np.linalg.matrix_power(G, k) @ plus)[1])
-                    for k in steps])
-    axp.plot(steps, ph / np.pi, marker="o", ms=4.5, color=col,
-             label=f"{name}   (step = " +
-                   {"T": r"$\pi/4$", "S": r"$\pi/2$", "Z": r"$\pi$"}[name] + ")")
+
+def relative_phase(G):
+    """The phase a diagonal gate puts on |1> relative to |0>."""
+    return float(np.angle(G[1, 1]) - np.angle(G[0, 0]))
+
+
+axp = fig.add_subplot(gs6[0, 1])
+for name, G, col, tex in [("T", T, style.BLUE, r"$\pi/4$"),
+                          ("S", S, style.ORANGE, r"$\pi/2$"),
+                          ("Z", Z, style.AQUA, r"$\pi$")]:
+    lam = relative_phase(G)
+    order = int(round(2 * np.pi / lam))          # applications to return to I
+    kk = np.arange(order + 1)
+    # accumulated (unwrapped) phase after k applications is exactly k * lam
+    axp.plot(kk, kk * lam / np.pi, marker="o", ms=4.5, color=col,
+             label=f"{name}   (step = " + tex + f",  order {order})")
+    # what np.angle actually reports: the same thing folded into [0, 2 pi)
+    wrapped = np.array([np.angle((np.linalg.matrix_power(G, int(k))
+                                  @ plus)[1]) % (2 * np.pi) for k in kk])
+    axp.plot(kk, wrapped / np.pi, ls="none", marker="o", ms=9,
+             mfc="none", mec=col, mew=1.1, zorder=4)
 axp.axhline(2.0, color=style.MUTED, lw=0.9, ls=(0, (4, 3)), zorder=1)
-axp.text(0.1, 2.06, r"$2\pi$ — back to the identity", fontsize=8,
-         color=style.MUTED, va="bottom")
+axp.text(6.0, 2.06, r"$2\pi$ — back to the identity", fontsize=8,
+         color=style.MUTED, va="bottom", ha="right")
 axp.set_xlabel("k  (gate applied k times)")
-axp.set_ylabel(r"accumulated phase on $|1\rangle$  $/\ \pi$")
+axp.set_ylabel(r"phase on $|1\rangle$  $/\ \pi$")
 axp.set_title("Phase accumulates linearly; the slope IS the rotation angle",
               loc="left", fontsize=10)
 axp.set_xticks(steps)
-axp.legend(loc="upper left")
+axp.set_xlim(-0.35, 8.6)
+axp.set_ylim(-0.35, 3.05)
+axp.legend(loc="upper center", ncols=3, fontsize=8.0)
+grid.annotate(axp, "hollow rings: what np.angle actually reports —\n"
+                   "the same phase, folded back into $[0, 2\\pi)$",
+              xy=(8, 0.0), xytext=(3.15, 0.42))
 plt.show()
 
 print("T^2 == S ->", np.allclose(np.linalg.matrix_power(T, 2), S))

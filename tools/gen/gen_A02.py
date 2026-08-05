@@ -199,7 +199,7 @@ for name, th, ph in CARDINALS:
                          np.sin(th) * np.sin(ph),
                          np.cos(th)])
     assert np.allclose(r, analytic, atol=1e-12)   # spherical polars, exactly
-    txt = "(" + ", ".join(f"{v:+.2f}" for v in r) + ")"
+    txt = "(" + ", ".join(f"{v:+.2f}" for v in np.round(r, 9) + 0.0) + ")"
     print(f"{name:>5} {th/np.pi:6.2f}pi {ph/np.pi:6.2f}pi   {txt:<26} "
           f"{np.linalg.norm(r):6.3f} {abs(s[0])**2:6.3f}")'''))
 
@@ -275,7 +275,7 @@ Right: the same state as three numbers. Bars are computed expectation values;
 the black ticks are the closed-form spherical polars. They land on top of each
 other because the derivation above is exact, not approximate."""))
 
-cells.append(code(r'''TH, PH = 2 * np.pi / 5, np.pi / 3        # 72 degrees down, 60 degrees around
+cells.append(code(r'''TH, PH = 0.40 * np.pi, 1.25 * np.pi      # 72 degrees down, 225 degrees around
 psi = from_angles(TH, PH)
 r = bloch_vector(psi)
 
@@ -302,7 +302,7 @@ def slerp_arc(a, b, radius=0.45, n=80):
     return pts * radius
 
 
-fig = plt.figure(figsize=(11.0, 4.8))
+fig = plt.figure(figsize=(10.4, 4.5))
 ax = fig.add_subplot(1, 2, 1, projection="3d")
 bloch.sphere(ax)
 fill(ax, 1.55)
@@ -324,9 +324,9 @@ for p, q in [(r, foot), ([0, 0, 0], foot)]:
     ax.plot([p[0], q[0]], [p[1], q[1]], [p[2], q[2]],
             color=style.MUTED, lw=1.0, ls=(0, (3, 3)), zorder=5)
 
-ax.text(r[0] * 1.16, r[1] * 1.16, r[2] * 1.16 + 0.13, r"$|\psi\rangle$",
-        color=style.ORANGE, fontsize=12, ha="center", zorder=9)
-bloch.label(ax, r"$\theta=0.40\pi$,  $\varphi=0.33\pi$", y=0.02)
+ax.text(r[0] * 1.24, r[1] * 1.24, r[2] * 1.24 + 0.24, r"$|\psi\rangle$",
+        color=style.ORANGE, fontsize=13, ha="center", zorder=9)
+bloch.label(ax, r"$\theta=0.40\pi$,  $\varphi=1.25\pi$", y=0.04)
 
 # ---- right panel: the same state as three expectation values
 axb = fig.add_subplot(1, 2, 2)
@@ -351,7 +351,7 @@ axb.set_xlabel("expectation value")
 axb.grid(axis="x", zorder=0)
 axb.grid(axis="y", visible=False)
 axb.set_axisbelow(True)
-axb.legend(loc="lower right")
+axb.legend(loc="lower left")
 axb.set_title("bars: computed from the state.  ticks: closed form", fontsize=10)
 plt.show()
 
@@ -377,16 +377,20 @@ cells.append(code(r'''COLORS = [style.BLUE, style.ORANGE, style.AQUA, style.MAGE
           style.GREEN, style.VIOLET]
 KETS = ["0", "1", "+", "-", "{+}i", "{-}i"]
 
-fig, axes = grid.frames(6, ncols=3, panel=(3.5, 3.2), projection="3d")
+fig, axes = grid.frames(6, ncols=3, panel=(3.7, 3.2), projection="3d")
 for ax, (name, th, ph), col, k in zip(axes, CARDINALS, COLORS, KETS):
     s = from_angles(th, ph)
     v = bloch_vector(s)                       # computed, not hard-coded
-    bloch.sphere(ax, labels=False)
-    bloch.vector(ax, v, color=col, lw=3.0)
-    ax.text(v[0] * 1.30, v[1] * 1.30, v[2] * 1.30 + 0.16, grid.ket(k),
-            color=col, fontsize=13, ha="center", va="center", zorder=9)
-    txt = "r = (" + ", ".join(f"{c:+.0f}" for c in v) + ")"
-    bloch.label(ax, txt + f"     P(0) = {abs(s[0])**2:.1f}", y=0.06, size=9.5)
+    # Frame labels stay on, but as AXIS names (+x/-x/...) rather than kets: the
+    # ket belongs in the caption, and printing it twice per panel -- once on the
+    # frame, once underneath -- reads as two different things.
+    bloch.sphere(ax, label_kets=False)
+    fill(ax, 1.42)
+    bloch.vector(ax, v, color=col, lw=3.4)
+    bloch.label(ax, grid.ket(k), y=0.10, size=15, color=col)
+    # +0.0 turns a "-0.00" into "0.00" -- "(-0, -1, +0)" reads as a bug.
+    txt = "r = (" + ", ".join(f"{c:+.0f}" for c in np.round(v, 9) + 0.0) + ")"
+    bloch.label(ax, txt + f"     P(0) = {abs(s[0])**2:.1f}", y=0.01, size=9.5)
 fig.suptitle("The six cardinal states: three orthonormal bases, three axes",
              x=0.005, ha="left", fontsize=11.5)
 plt.show()'''))
@@ -435,25 +439,34 @@ print("stereographic(r)      =", np.round(stereographic(bloch_vector(_s)), 6))
 RINGS = [30, 60, 90, 120]          # lines of constant theta, in degrees
 LIM = 2.6
 
-fig = plt.figure(figsize=(12.2, 4.3))
+fig = plt.figure(figsize=(11.4, 4.15))
 
 # ---- (a) the sphere, painted by P(0)
 axa = fig.add_subplot(1, 3, 1, projection="3d")
-bloch.sphere(axa, alpha=0.0, wire=False, equator=False, tick_axes=False)
+bloch.sphere(axa, alpha=0.0, wire=False, equator=False, tick_axes=False,
+             labels=False)
+fill(axa, 1.68)
 u = np.linspace(0, 2 * np.pi, 72)
 v = np.linspace(0, np.pi, 48)
 sx = np.outer(np.cos(u), np.sin(v))
 sy = np.outer(np.sin(u), np.sin(v))
 sz = np.outer(np.ones_like(u), np.cos(v))
+# alpha stays at 1.0: anything less and adjacent quads blend at their shared
+# edge, which paints a crosshatch of seams that reads as structure.
 axa.plot_surface(sx, sy, sz, facecolors=style.SEQ((1 + sz) / 2), rstride=1,
-                 cstride=1, linewidth=0, shade=False, alpha=0.97, zorder=1)
+                 cstride=1, linewidth=0, shade=False, antialiased=False,
+                 zorder=1)
 for deg in RINGS:                                    # white lines of latitude
     a = np.deg2rad(deg)
     t = np.linspace(0, 2 * np.pi, 160)
     axa.plot(np.sin(a) * np.cos(t), np.sin(a) * np.sin(t),
              np.cos(a) * np.ones_like(t), color=style.SURFACE, lw=1.1,
              alpha=0.9, zorder=6)
-bloch.label(axa, "(a)  sphere, coloured by P(0)", y=0.05, size=10)
+axa.text(0, 0, 1.26, grid.ket("0") + "   P(0)=1", color=style.INK_2,
+         fontsize=9.5, ha="center", va="center")
+axa.text(0, 0, -1.26, grid.ket("1") + "   P(0)=0", color=style.INK_2,
+         fontsize=9.5, ha="center", va="center")
+bloch.label(axa, "(a)  sphere, coloured by P(0)", y=0.02, size=10)
 
 # ---- (b) the projection itself, in cross-section
 axb = fig.add_subplot(1, 3, 2)
@@ -464,21 +477,28 @@ axb.scatter([0, 0], [1, -1], s=34, color=style.INK, zorder=6)
 axb.text(-0.13, 1.14, grid.ket("0"), fontsize=11, ha="center", color=style.INK)
 axb.text(-0.13, -1.30, grid.ket("1"), fontsize=11, ha="center", color=style.INK)
 axb.text(0.10, -1.26, "  (the eye)", fontsize=8.5, ha="left", color=style.MUTED)
-for deg, col in zip([50, 90, 130], [style.BLUE, style.ORANGE, style.MAGENTA]):
+for deg, col, dy in zip([50, 90, 130],
+                        [style.BLUE, style.ORANGE, style.MAGENTA],
+                        [0.24, 0.12, 0.12]):   # stagger: 50 and 90 land close
     a = np.deg2rad(deg)
-    px, pz = np.sin(a), np.cos(a)
-    wx = np.tan(a / 2)
-    axb.plot([0, wx], [-1, 0], color=col, lw=1.3, ls=(0, (4, 3)), zorder=3)
-    axb.scatter([px], [pz], s=40, color=col, zorder=7, edgecolors=style.SURFACE,
+    px, pz = np.sin(a), np.cos(a)          # the point on the sphere
+    wx = np.tan(a / 2)                     # where the sight-line crosses z=0
+    # The line of sight starts at the south pole and runs THROUGH both; which
+    # of the two comes first depends on the hemisphere, so draw out to the
+    # farther one and let the nearer sit on the segment.
+    far = (px, pz) if px ** 2 + (pz + 1) ** 2 > wx ** 2 + 1 else (wx, 0.0)
+    axb.plot([0, far[0]], [-1, far[1]], color=col, lw=1.3, ls=(0, (4, 3)),
+             zorder=3)
+    axb.scatter([px], [pz], s=44, color=col, zorder=7, edgecolors=style.SURFACE,
                 linewidths=0.9)
-    axb.scatter([wx], [0], s=40, marker="D", color=col, zorder=7,
+    axb.scatter([wx], [0], s=44, marker="D", color=col, zorder=7,
                 edgecolors=style.SURFACE, linewidths=0.9)
-    axb.text(wx, 0.11, rf"$\tan\frac{{{deg}^\circ}}{{2}}$", color=col,
-             fontsize=9, ha="center")
-axb.text(3.0, -1.18, "equatorial plane" + "\n" + r"$w=\tan\frac{\theta}{2}e^{i\varphi}$",
+    axb.text(wx, dy, rf"$\tan\frac{{{deg}^\circ}}{{2}}$", color=col,
+             fontsize=9.5, ha="center")
+axb.text(3.05, -1.34, "equatorial plane" + "\n" + r"$w=\tan\frac{\theta}{2}e^{i\varphi}$",
          fontsize=9, ha="right", va="bottom", color=style.INK_2)
-axb.set_xlim(-0.75, 3.15)
-axb.set_ylim(-1.45, 1.35)
+axb.set_xlim(-0.85, 3.15)
+axb.set_ylim(-1.55, 1.40)
 axb.set_aspect("equal")
 axb.set_axis_off()
 axb.set_title("(b)  a sight-line from the south pole", fontsize=10)
@@ -494,23 +514,33 @@ for deg in RINGS:
     rad = np.tan(np.deg2rad(deg) / 2)
     axc.add_patch(plt.Circle((0, 0), rad, fill=False, color=style.SURFACE,
                              lw=1.1, alpha=0.9, zorder=3))
-    axc.text(-rad * 0.707, rad * 0.707, rf"${deg}^\circ$", fontsize=7.5,
-             color=style.SURFACE, ha="center", va="center", zorder=5)
+    # Labels ride the 112.5 deg diagonal, between two meridians, so they never
+    # sit on a line; the inner rings are close together so only tag the outer.
+    if deg >= 60:
+        a = np.deg2rad(112.5)
+        axc.text(rad * np.cos(a), rad * np.sin(a), rf"$\theta={deg}^\circ$",
+                 fontsize=8, color=style.SURFACE, ha="center", va="center",
+                 zorder=5)
 for k in range(8):                                   # meridians = constant phi
     a = k * np.pi / 4
     axc.plot([0, LIM * 1.5 * np.cos(a)], [0, LIM * 1.5 * np.sin(a)],
              color=style.SURFACE, lw=0.7, alpha=0.55, zorder=2)
-marks = [(0, 0, "0", (0.16, 0.13)), (1, 0, "+", (0.16, 0.13)),
-         (-1, 0, "-", (-0.16, 0.13)), (0, 1, "{+}i", (0.18, 0.13)),
-         (0, -1, "{-}i", (0.18, -0.30))]
-for mx, my, k, (dx, dy) in marks:
+# |0> sits on the darkest part of the map, so its label flips to the surface
+# colour -- ink on that blue is unreadable.
+marks = [(0, 0, "0", (0.15, -0.26), "left", style.SURFACE),
+         (1, 0, "+", (0.16, 0.16), "left", style.INK),
+         (-1, 0, "-", (-0.16, 0.16), "right", style.INK),
+         (0, 1, "{+}i", (0.17, 0.17), "left", style.INK),
+         (0, -1, "{-}i", (0.17, -0.20), "left", style.INK)]
+for mx, my, k, (dx, dy), ha, tc in marks:
     axc.scatter([mx], [my], s=34, color=style.INK, zorder=6,
                 edgecolors=style.SURFACE, linewidths=1.0)
-    axc.text(mx + dx, my + dy, grid.ket(k), fontsize=10, color=style.INK,
-             ha="left", va="center", zorder=6)
-grid.annotate(axc, grid.ket("1") + " is at infinity:" + "\n" + "the south pole has no image",
-              (LIM * 0.86, -LIM * 0.86), (-LIM * 0.94, -LIM * 0.80),
-              color=style.INK, size=8.5)
+    axc.text(mx + dx, my + dy, grid.ket(k), fontsize=10.5, color=tc,
+             ha=ha, va="center", zorder=6)
+axc.text(-LIM * 0.94, -LIM * 0.93,
+         grid.ket("1") + " is at infinity - the south" + "\n"
+         + "pole is the one point with no image",
+         fontsize=8.5, color=style.INK, ha="left", va="bottom", zorder=7)
 axc.set_xlim(-LIM, LIM)
 axc.set_ylim(-LIM, LIM)
 axc.set_aspect("equal")
@@ -584,7 +614,9 @@ naive_r = np.stack([
     for P in PAULIS], axis=1)
 
 CAP = np.cos(np.deg2rad(30))       # polar caps: |z| > cos(30 deg)
-area_frac = 1 - CAP                # each cap is (1 - cos30)/2 of the sphere
+# Archimedes: a cap of angular radius a is (1 - cos a)/2 of the sphere's area,
+# so the two of them together are exactly 1 - cos(30 deg).
+area_frac = 1 - CAP
 print(f"the two polar caps within 30 deg of a pole are "
       f"{100*area_frac:.1f}% of the sphere's area")
 for nm, arr in [("Haar ", haar_r), ("naive", naive_r)]:
@@ -592,20 +624,21 @@ for nm, arr in [("Haar ", haar_r), ("naive", naive_r)]:
     print(f"  {nm}: {100*frac:5.1f}% of samples land there  "
           f"(x{frac/area_frac:.2f} the fair share)")'''))
 
-cells.append(code(r'''fig = plt.figure(figsize=(12.2, 4.3))
+cells.append(code(r'''fig = plt.figure(figsize=(11.4, 4.15))
 
 for j, (arr, col, ttl) in enumerate([
         (haar_r, style.BLUE, "(a)  Haar-random: uniform on the sphere"),
         (naive_r, style.ORANGE, r"(b)  naive $\theta,\varphi$ uniform: poles clog")]):
     ax = fig.add_subplot(1, 3, j + 1, projection="3d")
-    bloch.sphere(ax, alpha=0.03, wire=False, labels=False)
-    ax.scatter(arr[:, 0], arr[:, 1], arr[:, 2], s=2.6, color=col, alpha=0.32,
+    bloch.sphere(ax, alpha=0.035, wire=False, labels=False)
+    fill(ax, 1.62)
+    ax.scatter(arr[:, 0], arr[:, 1], arr[:, 2], s=3.0, color=col, alpha=0.34,
                depthshade=False, linewidths=0, rasterized=True, zorder=5)
-    ax.text(0, 0, 1.42, grid.ket("0"), color=style.INK_2, fontsize=9,
+    ax.text(0, 0, 1.30, grid.ket("0"), color=style.INK_2, fontsize=10,
             ha="center", va="center")
-    ax.text(0, 0, -1.42, grid.ket("1"), color=style.INK_2, fontsize=9,
+    ax.text(0, 0, -1.30, grid.ket("1"), color=style.INK_2, fontsize=10,
             ha="center", va="center")
-    bloch.label(ax, ttl, y=0.05, size=10)
+    bloch.label(ax, ttl, y=0.02, size=10)
 
 ax3 = fig.add_subplot(1, 3, 3)
 bins = np.linspace(-1, 1, 41)
@@ -681,10 +714,11 @@ cells.append(code(r'''def fidelity(a, b):
 PAIRS = [(0.55, 0.4), (1.9, 2.6), (1.15, 4.9)]
 PAIR_COLS = [style.BLUE, style.ORANGE, style.AQUA]
 
-fig = plt.figure(figsize=(11.0, 4.5))
+fig = plt.figure(figsize=(10.4, 4.5))
 
 ax = fig.add_subplot(1, 2, 1, projection="3d")
 bloch.sphere(ax, labels=False)
+fill(ax, 1.6)
 print(f"{'r':>26} {'-r (antipode)':>26} {'fidelity':>10}")
 for (th, ph), col in zip(PAIRS, PAIR_COLS):
     s = from_angles(th, ph)
@@ -698,10 +732,10 @@ for (th, ph), col in zip(PAIRS, PAIR_COLS):
     print("(" + ", ".join(f"{c:+.3f}" for c in v) + ")",
           " (" + ", ".join(f"{c:+.3f}" for c in -v) + ")", f"{f:10.2e}")
     assert abs(np.vdot(s, anti)) < 1e-12
-ax.text(0, 0, 1.42, grid.ket("0"), color=style.INK_2, fontsize=9, ha="center")
-ax.text(0, 0, -1.42, grid.ket("1"), color=style.INK_2, fontsize=9, ha="center")
+ax.text(0, 0, 1.30, grid.ket("0"), color=style.INK_2, fontsize=10, ha="center")
+ax.text(0, 0, -1.30, grid.ket("1"), color=style.INK_2, fontsize=10, ha="center")
 bloch.label(ax, "three antipodal pairs - each line is an orthonormal basis",
-            y=0.03, size=9.5)
+            y=0.02, size=9.5)
 
 # ---- fidelity against Bloch angle, for random pairs
 axf = fig.add_subplot(1, 2, 2)
@@ -713,11 +747,13 @@ rb = np.stack([np.einsum("ni,ij,nj->n", b.conj(), P, b).real for P in PAULIS], 1
 gamma = np.degrees(np.arccos(np.clip(np.sum(ra * rb, axis=1), -1, 1)))
 fid = np.abs(np.sum(a.conj() * b, axis=1)) ** 2
 
-axf.scatter(gamma, fid, s=7, color=style.BLUE, alpha=0.30, linewidths=0,
-            rasterized=True, zorder=3, label=f"{M} random pairs")
+# Curve underneath, points on top: the claim is that the samples cover the
+# curve, so the samples have to be the thing you actually see.
 gg = np.linspace(0, 180, 400)
-axf.plot(gg, np.cos(np.radians(gg) / 2) ** 2, color=style.INK, lw=1.6,
-         ls=(0, (5, 3)), zorder=5, label=r"$\cos^2(\gamma/2)$")
+axf.plot(gg, np.cos(np.radians(gg) / 2) ** 2, color=style.INK, lw=1.5,
+         ls=(0, (6, 5)), zorder=3, label=r"$\cos^2(\gamma/2)$")
+axf.scatter(gamma, fid, s=11, color=style.BLUE, alpha=0.50, linewidths=0,
+            rasterized=True, zorder=5, label=f"{M} random pairs")
 for gv, lab in [(0, "same state"), (90, "unbiased"), (180, "orthogonal")]:
     axf.axvline(gv, color=style.AXIS, lw=0.8, zorder=1)
     axf.text(gv + (3 if gv < 180 else -3), 1.03, lab, fontsize=8.5,
@@ -727,7 +763,7 @@ axf.set_xlabel(r"angle $\gamma$ between Bloch vectors (degrees)")
 axf.set_ylabel(r"$|\langle\psi_1|\psi_2\rangle|^2$")
 axf.set_xlim(-4, 184)
 axf.set_ylim(-0.05, 1.12)
-axf.legend(loc="upper right", fontsize=8.5)
+axf.legend(loc="lower left", fontsize=8.5)
 axf.set_title("every random pair lands on the curve", fontsize=10)
 plt.show()
 
