@@ -184,7 +184,7 @@ derive with a pen.*
 | A04 | Measurement, Sampling, and Collapse | Shot-convergence fan chart with the ±1/√N envelope; collapse drawn on three spheres |
 | A05 | Tensor Products and Multi-Qubit States | The `kron` block structure made visible; the endianness Rosetta table; where your laptop dies |
 | A06 | Two-Qubit Gates and Controlled Operations | Block structure of CNOT/CZ/SWAP; the 8×8 Toffoli; gates as permutation graphs |
-| A07 | A Tiny Statevector Simulator | Reshape-and-tensordot vs. naive kron, benchmarked; the 2ⁿ-vs-4ⁿ wall |
+| A07 | [A Tiny Statevector Simulator](notebooks/A07_Statevector_Simulator.ipynb) | Reshape-and-tensordot vs. naive kron, benchmarked; the 2ⁿ-vs-4ⁿ wall |
 | A08 | Interference and Phase Kickback | Amplitudes added head-to-tail in ℂ; the interference waterfall |
 | A09 | [Deutsch–Jozsa and Bernstein–Vazirani](notebooks/A09_Deutsch_Jozsa_Bernstein_Vazirani.ipynb) | Amplitude-evolution filmstrips; 16 secrets recovered as one binary image |
 | A10 | Grover From Scratch | Inversion about the mean, step by step; the **over-rotation dip** most tutorials hide |
