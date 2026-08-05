@@ -485,18 +485,19 @@ def perm_graph(ax, M, n_qubits, title=None, label_radius=1.30):
     ax.set_aspect("equal")
     ax.axis("off")
     if title:
-        ax.set_title(title, loc="left", fontsize=10, color=style.INK)
+        ax.set_title(title, loc="left", fontsize=10, color=style.INK, pad=12)
     ax.text(0.0, -1.58, f"{len(moved)} of {d} basis states move",
             ha="center", va="bottom", fontsize=8.5, color=style.MUTED)
     return perm
 
 
-fig, axes = plt.subplots(1, 3, figsize=(11.6, 4.3))
+fig, axes = plt.subplots(1, 3, figsize=(11.6, 3.9))
 perm_graph(axes[0], CNOT_01, 2, "CNOT   control q0, target q1")
 perm_graph(axes[1], SWAP, 2, "SWAP")
 perm_graph(axes[2], CCX_12_0, 3, "CCX   controls q1,q2, target q0")
-fig.suptitle("Gates as permutations of the basis states  "
-             "(hollow node = untouched)", x=0.005, ha="left", fontsize=11.5)
+fig.suptitle("Gates as permutations of the basis states       "
+             "hollow node = the state is left exactly where it was",
+             x=0.005, ha="left", fontsize=11.5)
 plt.show()
 
 for name, M, n in [("CNOT c=q0,t=q1", CNOT_01, 2), ("SWAP", SWAP, 2),
@@ -559,7 +560,15 @@ grid.annotate(ax1, "this one bar\\nturned by $\\\\pi$", xy=(3.0, 0.52),
 ax2 = fig.add_subplot(gs[0, 2])
 grid.prob_bars(ax2, np.abs(after_cz) ** 2, analytic=np.abs(PLUSPLUS) ** 2,
                ymax_pad=1.9)
-ax2.legend(["after CZ", "before CZ"], loc="upper right", ncols=2)
+# Build the legend from explicit proxies: relying on artist order here silently
+# swaps the two labels.
+from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
+
+ax2.legend(handles=[Patch(facecolor=style.BLUE, label="after CZ (bars)"),
+                    Line2D([0], [0], color=style.INK, lw=0, marker="_", ms=13,
+                           mew=2.0, label="before CZ (ticks)")],
+           loc="upper right", ncols=2)
 ax2.set_title("probabilities: identical", loc="left", fontsize=10)
 
 axw = fig.add_subplot(gs[0, 3], projection="polar")
@@ -608,7 +617,7 @@ print("(I(x)H) CZ (I(x)H) == CNOT(c=q1,t=q0) ?",
       np.allclose(rebuilt, CNOT_10))
 print("\\nmax |difference| :", np.max(np.abs(rebuilt - CNOT_10)))
 
-fig, axes = plt.subplots(1, 4, figsize=(12.4, 3.5))
+fig, axes = plt.subplots(1, 4, figsize=(12.4, 3.2))
 for ax, (name, M) in zip(axes, [
         ("CZ   control q1", CZ),
         ("CZ   control q0", CZ_REV),
@@ -619,10 +628,10 @@ for ax, (name, M) in zip(axes, [
         outline(ax, [3], [3], color=style.INK, lw=2.0)
     else:
         outline(ax, [2, 3], [2, 3], color=style.INK, lw=2.0)
-axes[0].text(0.0, -1.05, "identical arrays", fontsize=8.5, color=style.MUTED,
-             transform=axes[0].transAxes)
-axes[2].text(0.0, -1.05, "identical arrays", fontsize=8.5, color=style.MUTED,
-             transform=axes[2].transAxes)
+axes[0].text(0.0, -0.22, "these two are identical arrays", fontsize=8.5,
+             color=style.MUTED, transform=axes[0].transAxes)
+axes[2].text(0.0, -0.22, "these two are identical arrays", fontsize=8.5,
+             color=style.MUTED, transform=axes[2].transAxes)
 fig.suptitle("Left pair: swapping control and target changes nothing.   "
              "Right pair: a Hadamard on the target turns CZ into CNOT.",
              x=0.005, ha="left", fontsize=11)
@@ -785,15 +794,19 @@ axb.set_title("after CNOT:  Bell state, entangled", loc="left", fontsize=10)
 axc = fig.add_subplot(gs[0, 2])
 w = 0.36
 sp, sb = schmidt(product), schmidt(bell)
-axc.bar(np.arange(2) - w / 2, sp, width=w, color=style.ORANGE, label="product")
-axc.bar(np.arange(2) + w / 2, sb, width=w, color=style.BLUE, label="Bell")
+axc.bar(np.arange(2) - w / 2, sp, width=w, color=style.ORANGE, label="product",
+        zorder=3)
+axc.bar(np.arange(2) + w / 2, sb, width=w, color=style.BLUE, label="Bell",
+        zorder=3)
+axc.set_axisbelow(True)
 axc.set_xticks([0, 1])
 axc.set_xticklabels([r"$\\sigma_1$", r"$\\sigma_2$"])
 axc.set_ylabel("Schmidt coefficient")
 axc.set_ylim(0, 1.28)
 axc.legend(loc="upper right", ncols=2)
 axc.set_title("rank 1  ->  rank 2", loc="left", fontsize=10)
-axc.text(1.0, 0.06, "exactly 0", ha="center", fontsize=8, color=style.ORANGE)
+axc.text(1 - w / 2, 0.055, "exactly 0", ha="center", fontsize=8,
+         color=style.ORANGE, zorder=4)
 
 axd = fig.add_subplot(gs[1, :])
 axd.scatter(np.arange(N), s2_bell, s=11, color=style.BLUE, alpha=0.55,
@@ -809,7 +822,7 @@ axd.set_xlim(-6, N + 5)
 axd.set_ylim(-0.09, 0.88)
 axd.set_xlabel("random local-unitary trial")
 axd.set_ylabel(r"$\\sigma_2$  (0 = product)")
-axd.legend(loc="center left", ncols=2)
+axd.legend(loc="center left", ncols=2, markerscale=2.2)
 axd.set_title("400 random single-qubit gate pairs, and neither state budges",
               loc="left", fontsize=10)
 
