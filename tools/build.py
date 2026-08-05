@@ -28,6 +28,10 @@ NB_DIR = ROOT / "notebooks"
 MAX_BYTES = 2 * 1024 * 1024      # hard fail
 WARN_BYTES = 700 * 1024          # nudge
 
+# Kernel registered from the repo venv:
+#   .venv/Scripts/python -m ipykernel install --user --name quth
+KERNEL = os.environ.get("QUTH_KERNEL", "quth")
+
 # Dead Qiskit APIs. A hit anywhere in a notebook or generator fails the build --
 # this is the cheapest possible guard against the project's top failure mode.
 DEAD_APIS = [
@@ -76,7 +80,8 @@ def generate(nb_id):
     gen = GEN_DIR / f"gen_{nb_id}.py"
     if not gen.exists():
         return False, f"no generator {gen.name}"
-    env = dict(os.environ, PYTHONUTF8="1", PYTHONIOENCODING="utf-8")
+    env = dict(os.environ, PYTHONUTF8="1", PYTHONIOENCODING="utf-8",
+               PYTHONNOUSERSITE="1")
     r = subprocess.run([sys.executable, str(gen)], cwd=str(ROOT), env=env,
                        capture_output=True, text=True, encoding="utf-8",
                        errors="replace")
@@ -89,13 +94,24 @@ def execute(nb_id, timeout=900):
     path = notebook_path(nb_id)
     if path is None:
         return False, f"no notebook for {nb_id}"
+    # PYTHONNOUSERSITE is not optional: this venv otherwise picks up the user
+    # site-packages in AppData\Roaming, which shadows the venv's own nbconvert
+    # and hands execution to the system interpreter (where qviz is absent).
+    # Do NOT set MPLBACKEND=Agg here. ipykernel's inline backend is what captures
+    # figures into the notebook; forcing Agg is headless-safe but silently emits
+    # no images, and a notebook with no figures is a failed notebook in this repo.
     env = dict(os.environ, PYTHONUTF8="1", PYTHONIOENCODING="utf-8",
-               MPLBACKEND="Agg", QUTH_MAX_THREADS=os.environ.get("QUTH_MAX_THREADS", "2"),
+               PYTHONNOUSERSITE="1",
+               QUTH_MAX_THREADS=os.environ.get("QUTH_MAX_THREADS", "2"),
                OMP_NUM_THREADS=os.environ.get("QUTH_MAX_THREADS", "2"))
-    cmd = [sys.executable, "-m", "jupyter", "nbconvert", "--to", "notebook",
+    env.pop("MPLBACKEND", None)
+    # `-m nbconvert`, not `-m jupyter nbconvert`: the jupyter dispatcher shells
+    # out to whichever jupyter-nbconvert.EXE is first on PATH, which on this
+    # machine is the system one.
+    cmd = [sys.executable, "-m", "nbconvert", "--to", "notebook",
            "--execute", "--inplace",
            f"--ExecutePreprocessor.timeout={timeout}",
-           "--ExecutePreprocessor.kernel_name=python3",
+           f"--ExecutePreprocessor.kernel_name={KERNEL}",
            str(path)]
     r = subprocess.run(cmd, cwd=str(ROOT), env=env, capture_output=True,
                        text=True, encoding="utf-8", errors="replace")
