@@ -172,12 +172,12 @@ for r in range(2):
     for c in range(2):
         axS.add_patch(Rectangle((c - .5, r - .5), 1, 1, facecolor=tint(A[r, c]),
                                 edgecolor=style.SURFACE, lw=2.4))
-        # faint 2x2 subdivision: the copy of B hiding inside each block
-        for t in (0.0,):
-            axS.plot([c - .5, c + .5], [r + t, r + t], color=style.SURFACE,
-                     lw=0.7, alpha=0.65)
-            axS.plot([c + t, c + t], [r - .5, r + .5], color=style.SURFACE,
-                     lw=0.7, alpha=0.65)
+        # faint 2x2 subdivision: the copy of B hiding inside each block.
+        # Drawn with a gap in the middle so it does not strike through the label.
+        for x0, x1 in [(c - .5, c - .32), (c + .32, c + .5)]:
+            axS.plot([x0, x1], [r, r], color=style.SURFACE, lw=0.9, alpha=0.85)
+        for y0, y1 in [(r - .5, r - .22), (r + .22, r + .5)]:
+            axS.plot([c, c], [y0, y1], color=style.SURFACE, lw=0.9, alpha=0.85)
         axS.text(c, r, rf"$a_{{{r}{c}}}\,B$", ha="center", va="center", fontsize=13,
                  color="white" if dark(A[r, c]) else style.INK)
 axS.set_xlim(-.55, 1.55)
@@ -496,8 +496,9 @@ grid.annotate(ax1, "index 1, not index 4", xy=(1, 1.02), xytext=(1.6, 1.12))
 
 grid.amp_bars(ax2, psi, ylim=0.72)
 ax2.set_title("H on qubit 0, H on qubit 2, S on qubit 0", loc="left", fontsize=10)
-grid.annotate(ax2, "middle character always 0: qubit 1 was never touched",
-              xy=(4, 0.53), xytext=(1.9, 0.63))
+ax2.text(2.55, 0.635, "every populated label has 0 in the middle:\n"
+                      "qubit 1 was never touched",
+         fontsize=9, color=style.INK_2, ha="center", va="center", linespacing=1.45)
 
 # ---- the ruler
 axr.set_axis_off()
@@ -651,9 +652,11 @@ for ax, (name, st) in zip(axes, [("product:  " + grid.ket("+") + grid.ket("+"), 
     grid.prob_bars(ax, joint, analytic=predicted, labels=["00", "01", "10", "11"],
                    ymax_pad=1.45)
     ax.set_title(name, loc="left", fontsize=10)
-    h, _ = ax.get_legend_handles_labels()
-    ax.legend(h, ["true joint", r"$P(q_1)\times P(q_0)$"], loc="upper center",
-              ncol=2, fontsize=8)
+    # prob_bars labels its artists "measured"/"analytic"; matplotlib returns
+    # lines before patches, so map by NAME rather than by position.
+    rename = {"measured": "true joint", "analytic": r"$P(q_1)\times P(q_0)$"}
+    h, lab = ax.get_legend_handles_labels()
+    ax.legend(h, [rename[x] for x in lab], loc="upper center", ncol=2, fontsize=8)
 axes[1].set_ylabel("")
 fig.suptitle("Same marginals, different states - independence fails on the right",
              x=0.005, ha="left", fontsize=11.5)
@@ -812,13 +815,17 @@ for ax, (name, st, nq) in zip(axes, [
         ("5 qubits, PRODUCT state", prod5, 5),
         ("5 qubits, ENTANGLED state", ent5, 5),
         ("7 qubits - 128 bars, unreadable", big7, 7)]):
-    grid.amp_bars(ax, st, n_qubits=nq)
+    # edge=False past ~64 bars: a 1.2pt white bar edge is wider than the bar
+    # itself and erases the data.
+    grid.amp_bars(ax, st, n_qubits=nq, edge=nq <= 5)
     ax.set_title(name, loc="left", fontsize=9.5)
     if nq == 7:
         ticks = [0, 31, 63, 95, 127]
-        ax.set_xticks(ticks)
-        ax.set_xticklabels([grid.ket(format(i, "07b")) for i in ticks], fontsize=7,
-                           rotation=90)
+    else:
+        ticks = list(range(0, 2 ** nq, 2))      # every 2nd label; all 32 collide
+    ax.set_xticks(ticks)
+    ax.set_xticklabels([grid.ket(format(i, f"0{nq}b")) for i in ticks],
+                       fontsize=6.5, rotation=90)
     if ax is not axes[0]:
         ax.set_ylabel("")
 fig.suptitle("The first two panels look alike. Only one factorises.",
