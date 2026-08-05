@@ -129,24 +129,21 @@ def lint(nb_id):
     path = notebook_path(nb_id)
     gen = GEN_DIR / f"gen_{nb_id}.py"
 
-    sources = []
-    if gen.exists():
-        sources.append(("generator", gen.read_text(encoding="utf-8")))
     if path is not None:
         nb = nbformat.read(path, as_version=4)
         code = "\n".join(c.source for c in nb.cells if c.cell_type == "code")
-        md = "\n".join(c.source for c in nb.cells if c.cell_type == "markdown")
-        sources.append(("notebook", code))
     else:
         nb = None
-        code = md = ""
+        code = ""
 
-    for where, text in sources:
-        for pattern, label in DEAD_APIS:
-            for m in re.finditer(pattern, text):
-                line = text[:m.start()].count("\n") + 1
-                # The DO-NOT-WRITE table in a markdown cell is allowed to name them.
-                problems.append(f"dead API in {where} line {line}: {label}")
+    # Scan the notebook's CODE cells only. Markdown is deliberately allowed to
+    # name the dead APIs -- warning readers off them is part of the teaching --
+    # and scanning the generator source would flag that prose too, since the
+    # generator is where the markdown is authored.
+    for pattern, label in DEAD_APIS:
+        for m in re.finditer(pattern, code):
+            line = code[:m.start()].count("\n") + 1
+            problems.append(f"dead API in code line {line}: {label}")
 
     # Tofu bracket in figure text (code cells only; markdown renders fine).
     for m in TOFU.finditer(code):
