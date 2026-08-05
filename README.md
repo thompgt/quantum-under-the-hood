@@ -187,7 +187,7 @@ derive with a pen.*
 | A07 | [A Tiny Statevector Simulator](notebooks/A07_Statevector_Simulator.ipynb) | Reshape-and-tensordot vs. naive kron, benchmarked; the 2ⁿ-vs-4ⁿ wall |
 | A08 | [Interference and Phase Kickback](notebooks/A08_Interference_Phase_Kickback.ipynb) | Amplitudes added head-to-tail in ℂ; the interference waterfall |
 | A09 | [Deutsch–Jozsa and Bernstein–Vazirani](notebooks/A09_Deutsch_Jozsa_Bernstein_Vazirani.ipynb) | Amplitude-evolution filmstrips; 16 secrets recovered as one binary image |
-| A10 | Grover From Scratch | Inversion about the mean, step by step; the **over-rotation dip** most tutorials hide |
+| A10 | [Grover From Scratch](notebooks/A10_Grover_From_Scratch.ipynb) | Inversion about the mean, step by step; the **over-rotation dip** most tutorials hide |
 | A11 | [QFT and Phase Estimation From Scratch](notebooks/A11_QFT_Phase_Estimation.ipynb) | The QFT matrix as a phase swirl; exact vs. inexact phase and spectral leakage |
 | A12 | [Density Matrices, Mixed States, Noise Channels](notebooks/A12_Density_Matrices_Noise.ipynb) | The Bloch *ball*; a channel drawn as a deformation of that ball |
 
