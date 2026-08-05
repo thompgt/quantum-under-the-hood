@@ -221,12 +221,13 @@ running = np.cumsum(hit_zero, axis=1) / np.arange(1, N_MAX + 1)
 
 # Log-spaced sample points: 50 x 8192 plotted in full is 400k vertices for no
 # extra information, and the PNG budget is 500 KB.
-ticks = np.unique(np.round(np.logspace(0, np.log10(N_MAX), 160)).astype(int))
+ticks = np.unique(np.round(np.logspace(np.log10(3), np.log10(N_MAX),
+                                       160)).astype(int))
 curves = running[:, ticks - 1]
 
 sigma = np.sqrt(P_TRUE * (1 - P_TRUE) / ticks)
 
-fig = plt.figure(figsize=(11.5, 4.4))
+fig = plt.figure(figsize=(11.0, 4.1))
 gs = fig.add_gridspec(1, 3)
 axf = fig.add_subplot(gs[0, :2])
 axn = fig.add_subplot(gs[0, 2])
@@ -246,7 +247,7 @@ axf.axhline(P_TRUE, color=style.ORANGE, lw=1.6, zorder=4,
             label=f"true P(0) = {P_TRUE}")
 
 axf.set_xscale("log")
-axf.set_xlim(1, N_MAX)
+axf.set_xlim(3, N_MAX)
 axf.set_ylim(0, 1)
 axf.set_xlabel("shots N (log scale)")
 axf.set_ylabel("running estimate of P(0)")
@@ -261,8 +262,9 @@ axn.plot(eps, n_needed, color=style.BLUE, lw=2.0, zorder=3)
 for e in (0.1, 0.01, 0.001):
     n = 1.96 ** 2 * P_TRUE * (1 - P_TRUE) / e ** 2
     axn.plot([e], [n], marker="o", ms=5.5, color=style.ORANGE, zorder=4)
-    axn.annotate(f"  {n:,.0f} shots", (e, n), fontsize=8, color=style.INK_2,
-                 ha="left", va="top")
+    axn.annotate(f"{n:,.0f} shots", (e, n), textcoords="offset points",
+                 xytext=(9, -9), fontsize=8, color=style.INK_2,
+                 ha="left", va="center")
 axn.set_xscale("log")
 axn.set_yscale("log")
 axn.set_xlim(3e-4, 0.5)
@@ -441,41 +443,53 @@ r_post = [bloch_vector(post0), bloch_vector(post1)]
 
 # layout="none" (the string): passing None falls through to the constrained-layout
 # rcParam, which would silently discard subplots_adjust.
-fig = plt.figure(figsize=(10.6, 6.2), layout="none")
-gs = fig.add_gridspec(2, 2, width_ratios=[1.22, 1.0])
+fig = plt.figure(figsize=(9.8, 5.1), layout="none")
+gs = fig.add_gridspec(2, 2, width_ratios=[1.15, 1.0])
 axL = fig.add_subplot(gs[:, 0], projection="3d")
 axT = fig.add_subplot(gs[0, 1], projection="3d")
 axB = fig.add_subplot(gs[1, 1], projection="3d")
-fig.subplots_adjust(left=0.0, right=1.0, top=0.90, bottom=0.02,
-                    wspace=0.02, hspace=0.10)
+fig.subplots_adjust(left=0.0, right=1.0, top=0.94, bottom=0.0,
+                    wspace=0.0, hspace=0.04)
+
+
+def tighten(ax, lim=1.44):
+    """qviz frames at 1.52 to leave room for labels; 3D axes waste the rest."""
+    ax.set_xlim(-lim, lim)
+    ax.set_ylim(-lim, lim)
+    ax.set_zlim(-lim, lim)
+
 
 bloch.sphere(axL)
-bloch.vector(axL, r_pre, color=style.VIOLET, lw=3.0)
+bloch.vector(axL, r_pre, color=style.VIOLET, lw=3.2)
+tighten(axL)
 bloch.label(axL, "before: a superposition, pointing nowhere in particular",
-            y=0.07, size=9.5)
+            y=0.14, size=9.5)
 
 for ax, r, p, col, name in [(axT, r_post[0], prob0, style.BLUE, "0"),
                             (axB, r_post[1], prob1, style.ORANGE, "1")]:
-    bloch.sphere(ax, labels=True)
+    bloch.sphere(ax)
     bloch.vector(ax, r, color=col, lw=1.6 + 4.0 * p)
+    tighten(ax)
     bloch.label(ax, f"after outcome {name}:  probability {p:.2f}",
-                y=0.06, size=9.5)
+                y=0.13, size=9.5)
 
-for y_from, y_to, p, col, name in [(0.55, 0.76, prob0, style.BLUE, "0"),
-                                   (0.45, 0.24, prob1, style.ORANGE, "1")]:
-    ax_arrow = fig.add_axes([0.45, 0.10, 0.18, 0.80], zorder=5)
-    ax_arrow.set_axis_off()
-    ax_arrow.set_xlim(0, 1)
-    ax_arrow.set_ylim(0, 1)
-    ax_arrow.patch.set_alpha(0.0)
-    ax_arrow.annotate("", xy=(0.95, y_to), xytext=(0.05, y_from),
-                      arrowprops=dict(arrowstyle="-|>", color=col,
-                                      lw=1.0 + 7.0 * p, alpha=0.85,
-                                      shrinkA=0, shrinkB=0, mutation_scale=13,
-                                      connectionstyle="arc3,rad=0.16"))
-    ax_arrow.text(0.5, (y_from + y_to) / 2 + (0.07 if p == prob0 else -0.09),
-                  f"P({name}) = {p:.2f}", color=col, fontsize=10,
-                  ha="center", va="center", weight="medium")
+# One overlay axes in figure coordinates, so the two branch arrows can span the
+# gap between the 3D panels. Arrow width is proportional to P(outcome).
+over = fig.add_axes([0, 0, 1, 1], zorder=5)
+over.set_axis_off()
+over.set_xlim(0, 1)
+over.set_ylim(0, 1)
+over.patch.set_alpha(0.0)
+for xy, xytext, txy, p, col, name in [
+        ((0.615, 0.72), (0.455, 0.545), (0.535, 0.700), prob0, style.BLUE, "0"),
+        ((0.615, 0.29), (0.455, 0.455), (0.535, 0.285), prob1, style.ORANGE, "1")]:
+    over.annotate("", xy=xy, xytext=xytext,
+                  arrowprops=dict(arrowstyle="-|>", color=col,
+                                  lw=1.0 + 7.0 * p, alpha=0.85,
+                                  shrinkA=0, shrinkB=0, mutation_scale=13,
+                                  connectionstyle="arc3,rad=0.18"))
+    over.text(*txy, f"P({name}) = {p:.2f}", color=col, fontsize=10,
+              ha="center", va="center", weight="medium")
 
 fig.suptitle("Measurement is a random, irreversible jump to a pole",
              x=0.005, ha="left", fontsize=11.5)
@@ -486,10 +500,11 @@ print("Bloch vector before :", np.round(r_pre, 4), " length",
 print("Bloch vector after 0:", np.round(r_post[0], 4))
 print("Bloch vector after 1:", np.round(r_post[1], 4))
 print()
-print("Averaging the two outcomes weighted by probability gives z =",
-      round(prob0 * r_post[0][2] + prob1 * r_post[1][2], 4),
-      "= <Z> before. The average is NOT the state: it is a bookkeeping")
-print("identity, and the x and y components do not survive it.")'''))
+z_avg = prob0 * r_post[0][2] + prob1 * r_post[1][2]
+print(f"probability-weighted average of the two outcome z's = {z_avg:.4f}")
+print(f"                                    <Z> beforehand  = {r_pre[2]:.4f}")
+print("The statistics match - but the averaged x and y components are 0, while")
+print("the original state had both. The average is not a state on the sphere.")'''))
 
 cells.append(md(r"""That last print is worth pausing on. The probability-weighted average of the
 two post-measurement $z$ components equals $\langle Z\rangle$ of the original
@@ -576,7 +591,7 @@ value at all."""))
 
 cells.append(code(r'''N_BASIS = 2048
 
-fig, axes = plt.subplots(3, 3, figsize=(10.8, 8.0))
+fig, axes = plt.subplots(3, 3, figsize=(10.6, 7.2))
 for i, (sname, s) in enumerate(STATES.items()):
     for j, (bname, (U, blabels)) in enumerate(BASES.items()):
         ax = axes[i, j]
@@ -602,7 +617,8 @@ print(f"{'state':>7}  {'Z basis':>18}  {'X basis':>18}  {'Y basis':>18}")
 for sname, s in STATES.items():
     row = "  ".join(f"{str(np.round(probs_in_basis(s, U), 3)):>18}"
                     for U, _ in BASES.values())
-    print(f"{sname:>7}  {row}")'''))
+    plain = sname.replace("{", "").replace("}", "")
+    print(f"{plain:>7}  {row}")'''))
 
 cells.append(md(r"""There is a conservation law hiding in that table. For a pure qubit,
 
@@ -634,23 +650,44 @@ If the sampler is unbiased, the $p$-values from many trials must be **uniform on
 $[0,1]$** — not "mostly large", not "mostly small", uniform. A histogram sagging
 towards zero means the sampler is biased; a histogram piled at one means it is
 suspiciously well-behaved (a real diagnosis in fabricated data). Uniformity is a
-much sharper test than "the mean looks right"."""))
+much sharper test than "the mean looks right".
+
+One design choice needs justifying up front: each trial uses a **different**
+number of shots, drawn between 200 and 2000. That is not decoration. Counts are
+integers, so at a fixed $N$ the statistic can only land on a lattice and the
+$p$-values are discrete, not continuous — the histogram grows teeth even when
+nothing is wrong. Mixing $N$ superposes lattices of different spacings and
+recovers a genuinely continuous comparison. The last panel of the figure shows
+what the teeth look like when you don't do this."""))
 
 cells.append(code(r'''from scipy import stats
 
-TRIALS, N_TRIAL = 4000, 400
+TRIALS = 4000
 PSI_TEST = np.array([np.sqrt(0.62), np.sqrt(0.38) * 1j])   # phase must not matter
 p_test = probabilities(PSI_TEST)
 
-raw = measure_shots(PSI_TEST, TRIALS * N_TRIAL, rng).reshape(TRIALS, N_TRIAL)
-obs0 = (raw == 0).sum(axis=1)
-observed = np.stack([obs0, N_TRIAL - obs0], axis=1)
-expected = N_TRIAL * p_test
 
-chi2 = ((observed - expected) ** 2 / expected).sum(axis=1)
-pvals = stats.chi2.sf(chi2, df=1)
+def chi2_pvalues(state, shot_counts, rng):
+    """Pearson chi-squared per trial, and its p-value on df = 1."""
+    p = probabilities(state)
+    obs0 = np.array([np.sum(measure_shots(state, int(N), rng) == 0)
+                     for N in shot_counts])
+    observed = np.stack([obs0, shot_counts - obs0], axis=1)
+    expected = np.outer(shot_counts, p)
+    stat = ((observed - expected) ** 2 / expected).sum(axis=1)
+    return stat, stats.chi2.sf(stat, df=1)
 
-print(f"{TRIALS} trials of {N_TRIAL} shots each on P(0) = {p_test[0]:.2f}")
+
+shot_counts = rng.integers(200, 2000, size=TRIALS)
+chi2, pvals = chi2_pvalues(PSI_TEST, shot_counts, rng)
+
+# The same test run at a deliberately small, FIXED shot count, to expose the
+# lattice the mixed-N ensemble is designed to average away.
+N_TEETH = 40
+chi2_t, pvals_t = chi2_pvalues(PSI_TEST, np.full(TRIALS, N_TEETH), rng)
+
+print(f"{TRIALS} trials, {shot_counts.min()}-{shot_counts.max()} shots each, "
+      f"on P(0) = {p_test[0]:.2f}")
 print(f"  mean of p-values      : {pvals.mean():.4f}   (uniform -> 0.5)")
 print(f"  fraction p < 0.05     : {np.mean(pvals < 0.05):.4f}   (expect ~0.05)")
 print(f"  fraction p < 0.01     : {np.mean(pvals < 0.01):.4f}   (expect ~0.01)")
@@ -658,7 +695,8 @@ print(f"  mean chi2 statistic   : {chi2.mean():.4f}   (expect ~1.0 for df=1)")
 ks = stats.kstest(pvals, "uniform")
 print(f"  KS test vs uniform    : D = {ks.statistic:.4f}, p = {ks.pvalue:.4f}")'''))
 
-cells.append(code(r'''fig, axes = plt.subplots(1, 3, figsize=(11.5, 3.5))
+cells.append(code(r'''fig, axes = plt.subplots(2, 2, figsize=(9.6, 6.4))
+axes = axes.ravel()
 
 ax = axes[0]
 xs = np.linspace(0.05, 9, 400)
@@ -701,27 +739,45 @@ ax.plot([0, 1], [0, 1], color=style.INK, lw=1.2, ls=(0, (4, 3)), zorder=3,
 ax.plot(srt, ecdf, color=style.ORANGE, lw=2.0, zorder=4, label="empirical CDF")
 ax.set_xlim(0, 1)
 ax.set_ylim(0, 1)
-ax.set_aspect("equal")
 ax.set_xlabel("p-value")
 ax.set_ylabel("cumulative fraction")
 ax.set_title("and stay flat cumulatively", loc="left", fontsize=10)
 ax.legend(fontsize=8.5, loc="upper left")
 
-fig.suptitle("The sampler is unbiased - shown three ways", x=0.005, ha="left",
-             fontsize=11.5)
+ax = axes[3]
+cnt_t, _ = np.histogram(pvals_t, bins=nb, range=(0, 1))
+ax.fill_between([0, 1], exp_cnt - band, exp_cnt + band, color=style.BLUE,
+                alpha=0.16, lw=0, zorder=1)
+ax.axhline(exp_cnt, color=style.INK, lw=1.4, zorder=4)
+ax.bar(mid, cnt_t, width=1 / nb * 0.9, color=style.MUTED, alpha=0.9, zorder=3)
+ax.set_xlim(0, 1)
+ax.set_ylim(0, cnt_t.max() * 1.35)
+ax.set_xlabel("p-value")
+ax.set_ylabel("trials per bin")
+ax.set_title(f"the same sampler at a fixed N = {N_TEETH}: teeth",
+             loc="left", fontsize=10)
+ax.text(0.5, 0.97, "discreteness, not bias", transform=ax.transAxes,
+        ha="center", va="top", fontsize=8.5, color=style.INK_2)
+
+fig.suptitle("The sampler is unbiased - and what a lattice artefact looks like",
+             x=0.005, ha="left", fontsize=11.5)
 plt.show()'''))
 
-cells.append(md(r"""The $p$-value histogram is flat to within its own Poisson error bars, and the
+cells.append(md(r"""The $\chi^2$ statistics follow the $\chi^2_1$ density they are supposed to, the
+$p$-value histogram is flat to within its own Poisson error bars, and the
 empirical CDF stays inside the Kolmogorov–Smirnov band. The sampler is doing
 what the Born rule says.
 
-**One honest wrinkle.** The counts are integers, so $\chi^2$ can only take
-discrete values and the $p$-value distribution is really a fine lattice, not a
-continuum. At $N = 400$ the lattice is fine enough to look continuous; drop to
-$N = 10$ and the histogram develops visible teeth even though nothing is wrong.
-A $p$-value from a discrete statistic is *conservative*, and a KS test against a
-continuous uniform is being slightly unfair to it. Worth knowing before you use
-this test on a small-shot experiment and conclude your hardware is broken."""))
+The fourth panel is the honest wrinkle, and it is the same sampler. At a fixed
+$N = 40$ there are only 41 possible tallies, so only about 20 distinct
+$p$-values, and a 20-bin histogram of them looks alarming. **Nothing is wrong
+with the sampler** — the comparison distribution is wrong. A $p$-value built
+from a discrete statistic is conservative, and a KS test against a continuous
+uniform is being unfair to it.
+
+This is not a pedantic footnote. It is exactly the situation you are in when you
+run a 100-shot job on real hardware, run a goodness-of-fit test, get $p =
+0.003$, and conclude the device is broken."""))
 
 # ------------------------------------------------------------------ limits
 cells.append(md(r"""---
@@ -836,7 +892,7 @@ print("A04 checkpoint passed.")'''))
 
 cells.append(md(r"""---
 
-**Next:** [A05 — Multiple Qubits, the Tensor Product, and Endianness](A05_Tensor_Product.ipynb).
+**Next:** [A05 — Multiple Qubits, the Tensor Product, and Endianness](A05_Tensor_Products.ipynb).
 We have been measuring one qubit at a time, and quietly using a 2-qubit state in
 Figure 1 without saying where it came from. Next we build the tensor product
 that makes it — and confront the fact that the textbook `np.kron(q0, q1)` gives
