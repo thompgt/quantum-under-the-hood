@@ -30,10 +30,14 @@ def axes3d(fig=None, rect=111, figsize=(4.0, 4.0)):
 
 
 def sphere(ax, *, labels=True, equator=True, alpha=0.055, wire=True,
-           label_kets=True, tick_axes=True):
+           label_kets=True, tick_axes=True, zoom=1.0):
     """Draw the Bloch sphere frame on a 3D axis.
 
     Returns the axis. Call before :func:`vector` / :func:`path`.
+
+    ``zoom`` scales the sphere within its axes. The default frame leaves room
+    for the pole labels, which is generous when a sphere sits in a small panel
+    of a frame grid - pass ``zoom=1.5`` or so to fill the panel.
     """
     u = np.linspace(0, 2 * np.pi, 48)
     v = np.linspace(0, np.pi, 26)
@@ -74,15 +78,15 @@ def sphere(ax, *, labels=True, equator=True, alpha=0.055, wire=True,
             ax.text(*pos, hi, color=INK_2, fontsize=9, ha="center", va="center")
             ax.text(*neg, lo, color=INK_2, fontsize=9, ha="center", va="center")
 
-    _frame(ax)
+    _frame(ax, zoom=zoom)
     return ax
 
 
-def _frame(ax, lim=1.52):
+def _frame(ax, lim=1.52, *, zoom=1.0):
     ax.set_xlim(-lim, lim)
     ax.set_ylim(-lim, lim)
     ax.set_zlim(-lim, lim)
-    ax.set_box_aspect((1, 1, 1))
+    ax.set_box_aspect((1, 1, 1), zoom=zoom)
     ax.set_axis_off()
     ax.view_init(elev=18, azim=32)
     try:

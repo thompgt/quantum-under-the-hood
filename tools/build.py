@@ -59,6 +59,13 @@ DEAD_APIS = [
 # U+27E9/U+27E8 are missing from Segoe UI and rasterise as tofu in figures.
 TOFU = re.compile(r"[⟨⟩]")
 
+# Mojibake: UTF-8 bytes that were decoded as cp1252 somewhere upstream. On
+# Windows, `Get-Content -Raw` / `Set-Content` in PowerShell 5.1 reads a BOM-less
+# UTF-8 file as ANSI and silently rewrites every non-ASCII character this way --
+# an em dash becomes "â€”". It renders as garbage in the committed notebook but
+# is still perfectly valid Python, so nothing else here would catch it.
+MOJIBAKE = re.compile(r"â€|Ã[©¨¢«»]|Â[ §°]|â„¢")
+
 
 def sh(msg):
     print(msg, flush=True)
@@ -149,6 +156,22 @@ def lint(nb_id):
     for m in TOFU.finditer(code):
         line = code[:m.start()].count("\n") + 1
         problems.append(f"literal U+27E8/9 in code line {line}: use grid.ket() or mathtext")
+
+    # Mojibake, in the generator AND in every cell of the notebook. Unlike the
+    # checks above this one covers markdown too, because prose em dashes are
+    # exactly what a bad cp1252 round-trip corrupts first.
+    scan = []
+    if gen.exists():
+        scan.append((f"gen_{nb_id}.py", gen.read_text(encoding="utf-8", errors="replace")))
+    if nb is not None:
+        scan.append((f"{nb_id} notebook",
+                     "\n".join(c.source for c in nb.cells)))
+    for where, text in scan:
+        seen = {m.group(0) for m in MOJIBAKE.finditer(text)}
+        if seen:
+            problems.append(
+                f"mojibake in {where}: {sorted(seen)} -- a UTF-8 file was read as "
+                f"cp1252 (do not edit these through PowerShell text pipelines)")
 
     if nb is not None:
         if "seed" not in code and "default_rng" not in code:

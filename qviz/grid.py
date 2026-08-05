@@ -93,7 +93,8 @@ def phase_hands(ax, positions, heights, phases, *, radius=6.0, color=INK,
 
 def amp_bars(ax, amplitudes, *, labels=None, n_qubits=None, ylim=None,
              show_zero_phase=True, edge=True, label_rotation=None,
-             ymax_pad=1.30, bar_width=0.78, hands=True):
+             ymax_pad=1.30, bar_width=0.78, hands=True,
+             ylabel="|amplitude|", tick_every=1):
     """THE signature plot: height = |amplitude|, fill colour = phase.
 
     ``amplitudes`` is a complex vector in the repo's little-endian convention
@@ -105,6 +106,10 @@ def amp_bars(ax, amplitudes, *, labels=None, n_qubits=None, ylim=None,
     ``hands=True`` adds a clock hand above each bar pointing at the phase angle,
     so phase survives colour-vision deficiency and greyscale printing. It is
     dropped automatically past 32 states, where the bars are too dense.
+
+    ``tick_every=k`` labels every k-th bar; past ~16 states one ket per bar is
+    unreadable. ``ylabel=None`` drops the y-label, which frees that slot for a
+    row name in a frame grid.
     """
     amps = np.asarray(amplitudes).ravel()
     mag = np.abs(amps)
@@ -124,12 +129,14 @@ def amp_bars(ax, amplitudes, *, labels=None, n_qubits=None, ylim=None,
     if hands and len(amps) <= 32:
         phase_hands(ax, idx, mag, np.angle(amps))
 
-    ax.set_xticks(idx)
+    keep = idx[::max(1, int(tick_every))]
+    ax.set_xticks(keep)
     if label_rotation is None:
-        label_rotation = 0 if len(amps) <= 16 else 90
-    ax.set_xticklabels([ket(s) for s in labels], rotation=label_rotation,
-                       fontsize=8 if len(amps) <= 16 else 6.5)
-    ax.set_ylabel("|amplitude|")
+        label_rotation = 0 if len(keep) <= 16 else 90
+    ax.set_xticklabels([ket(labels[i]) for i in keep], rotation=label_rotation,
+                       fontsize=8 if len(keep) <= 16 else 6.5)
+    if ylabel:
+        ax.set_ylabel(ylabel)
     ax.set_ylim(0, ylim if ylim is not None else max(mag.max() * ymax_pad, 1e-9))
     ax.set_xlim(-0.6, len(amps) - 0.4)
     ax.grid(axis="y", zorder=0)
@@ -138,7 +145,8 @@ def amp_bars(ax, amplitudes, *, labels=None, n_qubits=None, ylim=None,
 
 
 def prob_bars(ax, probs, *, labels=None, n_qubits=None, color=None,
-              analytic=None, label_rotation=None, ymax_pad=1.25):
+              analytic=None, label_rotation=None, ymax_pad=1.25,
+              ylabel="probability", tick_every=1):
     """Probability bars, optionally overlaid with an analytic reference."""
     from qviz.style import BLUE
 
@@ -154,13 +162,69 @@ def prob_bars(ax, probs, *, labels=None, n_qubits=None, color=None,
         ax.plot(idx, a, ls="none", marker="_", ms=13, mew=2.0, color=INK,
                 zorder=5, label="analytic")
         top = max(top, a.max())
-    ax.set_xticks(idx)
+    keep = idx[::max(1, int(tick_every))]
+    ax.set_xticks(keep)
     if label_rotation is None:
-        label_rotation = 0 if len(p) <= 16 else 90
-    ax.set_xticklabels([ket(s) for s in labels], rotation=label_rotation,
-                       fontsize=8 if len(p) <= 16 else 6.5)
-    ax.set_ylabel("probability")
+        label_rotation = 0 if len(keep) <= 16 else 90
+    ax.set_xticklabels([ket(labels[i]) for i in keep], rotation=label_rotation,
+                       fontsize=8 if len(keep) <= 16 else 6.5)
+    if ylabel:
+        ax.set_ylabel(ylabel)
     ax.set_ylim(0, max(top * ymax_pad, 1e-9))
+    ax.grid(axis="y", zorder=0)
+    ax.set_axisbelow(True)
+    return ax
+
+
+def signed_bars(ax, amps, *, labels=None, n_qubits=None, mean=True,
+                ghost=None, highlight=None, ylabel="amplitude",
+                tick_every=1, label_rotation=None, ymax_pad=1.35):
+    """Real amplitudes as signed bars, with the mean drawn across them.
+
+    The encoding for inversion-about-the-mean: bars carry sign as direction
+    rather than folding it into a colour, so "reflect through the mean" is a
+    visible geometric operation. Only valid when every amplitude is real -
+    Grover and amplitude amplification keep them real, most circuits do not.
+
+    ``ghost`` draws a previous amplitude vector as hollow outlines behind the
+    bars, so a step shows where each bar moved from. ``highlight`` is an index
+    (the marked item) drawn in the accent colour.
+    """
+    from qviz.style import BLUE, ORANGE
+
+    a = np.asarray(amps, dtype=float).ravel()
+    idx = np.arange(len(a))
+    if labels is None:
+        labels = _basis_labels(len(a), n_qubits)
+
+    cols = [ORANGE if (highlight is not None and i == highlight) else BLUE
+            for i in idx]
+    if ghost is not None:
+        g = np.asarray(ghost, dtype=float).ravel()
+        ax.bar(idx, g, width=0.78, facecolor="none", edgecolor=MUTED,
+               linewidth=0.9, linestyle=":", zorder=2)
+    ax.bar(idx, a, width=0.78, color=cols, edgecolor=SURFACE, linewidth=1.1,
+           zorder=3)
+    ax.axhline(0, color=AXIS, lw=1.0, zorder=4)
+
+    if mean:
+        m = a.mean()
+        ax.axhline(m, color=INK, lw=1.3, ls="--", zorder=5)
+        ax.annotate(f"mean {m:+.3f}", xy=(len(a) - 0.4, m),
+                    xytext=(-2, 3), textcoords="offset points",
+                    ha="right", va="bottom", fontsize=7.5, color=INK)
+
+    keep = idx[::max(1, int(tick_every))]
+    ax.set_xticks(keep)
+    if label_rotation is None:
+        label_rotation = 0 if len(keep) <= 16 else 90
+    ax.set_xticklabels([ket(labels[i]) for i in keep], rotation=label_rotation,
+                       fontsize=8 if len(keep) <= 16 else 6.5)
+    if ylabel:
+        ax.set_ylabel(ylabel)
+    lim = max(np.abs(a).max(), 1e-9) * ymax_pad
+    ax.set_ylim(-lim, lim)
+    ax.set_xlim(-0.6, len(a) - 0.4)
     ax.grid(axis="y", zorder=0)
     ax.set_axisbelow(True)
     return ax
@@ -168,13 +232,21 @@ def prob_bars(ax, probs, *, labels=None, n_qubits=None, color=None,
 
 def matrix(ax, M, *, part="re", labels=None, annot=None, cbar=True,
            vmax=None, title=None, grid_lines=True, fmt="{:.2f}",
-           hide_zeros=True):
+           hide_zeros=True, annot_size=6.5):
     """Matrix heatmap.
 
-    ``part`` is one of ``"re"``, ``"im"``, ``"abs"``, ``"phase"``. Real and
-    imaginary parts use the diverging map anchored symmetrically at 0 so the
-    sign is readable; magnitude uses the sequential map; phase uses the cyclic
-    map, since phase wraps.
+    ``part`` is one of ``"re"``, ``"im"``, ``"abs"``, ``"phase"``,
+    ``"nonzero"``. Real and imaginary parts use the diverging map anchored
+    symmetrically at 0 so the sign is readable; magnitude uses the sequential
+    map; phase uses the cyclic map, since phase wraps.
+
+    ``"nonzero"`` is the sparsity view: every non-zero entry gets one ink and
+    exact zeros go grey. Use it when the question is "where are the entries",
+    not "how big are they" - an ``"abs"`` ramp makes a zero read as "small"
+    rather than "absent".
+
+    ``annot_size`` is the annotation font size; bump it when a small matrix is
+    blown up to a large panel.
     """
     M = np.asarray(M)
     n = M.shape[0]
@@ -196,6 +268,12 @@ def matrix(ax, M, *, part="re", labels=None, annot=None, cbar=True,
         data = np.ma.masked_where(np.abs(M) < 1e-12, np.angle(M) % (2 * np.pi))
         cmap = PHASE
         kw = dict(vmin=0, vmax=2 * np.pi)
+    elif part == "nonzero":
+        # One ink for "present", grey for "absent". No magnitude ramp, because
+        # magnitude is not the question being asked.
+        data = np.ma.masked_where(np.abs(M) < 1e-12, np.ones_like(np.abs(M)))
+        cmap = SEQ
+        kw = dict(vmin=0, vmax=1)
     else:
         raise ValueError(f"part must be re/im/abs/phase, got {part!r}")
 
@@ -223,7 +301,9 @@ def matrix(ax, M, *, part="re", labels=None, annot=None, cbar=True,
     ax.tick_params(which="minor", length=0)
 
     if annot is None:
-        annot = n <= 8
+        # "nonzero" carries no magnitude, so annotating it prints 1.00 in every
+        # occupied cell - noise, not information.
+        annot = n <= 8 and part != "nonzero"
     if annot:
         plain = np.ma.filled(data, 0.0)
         thr = 0.55 * max(np.abs(plain).max(), 1e-12)
@@ -233,7 +313,7 @@ def matrix(ax, M, *, part="re", labels=None, annot=None, cbar=True,
                 if hide_zeros and abs(val) < 1e-12:
                     continue  # a grid of "0.00" is clutter, not information
                 ax.text(j, i, fmt.format(val), ha="center", va="center",
-                        fontsize=6.5,
+                        fontsize=annot_size,
                         color="white" if abs(val) > thr and part != "phase" else INK)
     if cbar:
         cb = ax.figure.colorbar(im, ax=ax, fraction=0.046, pad=0.03)

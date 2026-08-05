@@ -93,7 +93,10 @@ every rebuild produces a different diff and review becomes impossible.
 
 `qviz` is the shared **drawing** layer and is **frozen** during notebook
 authoring — do not edit it. If you need a change, say so in your final message
-and the orchestrator will apply it between waves.
+and the orchestrator will apply it between waves. That is how `signed_bars`,
+`matrix(part="nonzero")`, `sphere(zoom=)` and the `ylabel=`/`tick_every=`
+pass-throughs on `amp_bars`/`prob_bars` got there — check whether the helper you
+want already exists before writing it inline.
 
 The hard rule: **`qviz` must never compute quantum mechanics for a Track A
 notebook.** If A03 imported `apply_gate` from a helper, the notebook would stop
@@ -107,13 +110,25 @@ course use `qiskit.quantum_info` — that IS its subject.
   `nbformat`; `tools/build.py` runs it and executes the result. Hand-written
   notebook JSON breaks on LaTeX escaping and is unreviewable in a diff.
 - Generators must be **idempotent** — running twice gives the same notebook.
+- **Write cell sources as raw strings** (`r'''...'''`) rather than escaping
+  backslashes. `r"$\pi$"` beats `"$\\\\pi$"`; the emitted notebook is identical
+  and the generator stays reviewable. A01 predates this and still uses the
+  doubled form — follow A09/A10, not A01, on this one point.
+- **Never edit a generator through a PowerShell text pipeline.** `Get-Content
+  -Raw` / `Set-Content` in PS 5.1 reads a BOM-less UTF-8 file as ANSI and
+  silently corrupts every non-ASCII character — em dashes become `â€”`. The
+  result is still valid Python, so it executes and ships. Use the Edit tool.
+  `tools/build.py` now fails on the resulting mojibake, but do not rely on it.
 - First code cell of every notebook: `from qviz import style; style.use()`.
 - **No emoji in `print()`.** Windows stdout is cp1252 and will raise
   `UnicodeEncodeError`. Emoji in markdown cells is fine.
 - **No literal `⟩` (U+27E9) in figure text** — missing from Segoe UI, renders as
   a tofu box. Use `qviz.grid.ket("01")` or mathtext `$|01\rangle$`. In markdown
   cells the Unicode character is fine.
-- Figures: `dpi=110`, target < 500 KB per notebook, hard fail at 2 MB.
+- Figures: `dpi=110`. The gate nudges at 700 KB per notebook and hard-fails at
+  2 MB. Going over the nudge is acceptable for a genuinely 3-D-heavy notebook
+  (A02, A12) — say why in the commit message rather than cutting a figure or
+  flattening the render to squeeze under it.
   `rasterized=True` on scatter plots over ~5k points. One figure with subplots,
   never 16 separate figures. `plt.close(fig)` inside loops.
 - Never print a full statevector past a few qubits — use `qviz.grid.show_state`.
