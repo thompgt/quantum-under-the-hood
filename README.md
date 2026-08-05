@@ -20,6 +20,130 @@ result they mirror, so the two halves keep each other honest.
 
 ---
 
+## Skills & topics covered
+
+<p>
+<img alt="Qiskit 2.5" src="https://img.shields.io/badge/Qiskit-2.5-6929C4?style=for-the-badge&logo=qiskit&logoColor=white">
+<img alt="Qiskit Aer" src="https://img.shields.io/badge/Qiskit_Aer-0.17-6929C4?style=for-the-badge">
+<img alt="Python 3.13" src="https://img.shields.io/badge/Python-3.13-3776AB?style=for-the-badge&logo=python&logoColor=white">
+<img alt="NumPy" src="https://img.shields.io/badge/NumPy-2.3-013243?style=for-the-badge&logo=numpy&logoColor=white">
+<img alt="SciPy" src="https://img.shields.io/badge/SciPy-1.16-8CAAE6?style=for-the-badge&logo=scipy&logoColor=white">
+<img alt="Matplotlib" src="https://img.shields.io/badge/Matplotlib-3.10-11557C?style=for-the-badge">
+<img alt="Jupyter" src="https://img.shields.io/badge/Jupyter-executed-F37626?style=for-the-badge&logo=jupyter&logoColor=white">
+</p>
+
+<table>
+<tr><td width="33%" valign="top">
+
+**⚛️ Quantum foundations**
+
+```text
+Complex amplitudes
+Superposition
+Global vs relative phase
+Born rule
+Bloch sphere
+Measurement & collapse
+Basis choice
+Tensor products
+Endianness
+Entanglement
+No-cloning
+```
+</td><td width="33%" valign="top">
+
+**🔀 Gates & circuits**
+
+```text
+Unitarity
+Pauli matrices
+Rotations exp(-iθP/2)
+Hadamard
+CNOT / CZ / SWAP
+Toffoli (CCX)
+Controlled-U
+Multi-controlled gates
+Circuit depth & DAGs
+Basis translation
+Transpilation
+```
+</td><td width="33%" valign="top">
+
+**🧮 Algorithms**
+
+```text
+Interference
+Phase kickback
+Deutsch-Jozsa
+Bernstein-Vazirani
+Grover search
+Amplitude amplification
+Quantum Fourier Transform
+Phase estimation
+Shor order-finding
+Teleportation
+Superdense coding
+```
+</td></tr>
+<tr><td valign="top">
+
+**📉 Noise & error**
+
+```text
+Density matrices
+Mixed states
+Partial trace
+Purity & von Neumann entropy
+Kraus operators
+CPTP maps
+Depolarizing channel
+Amplitude/phase damping
+T1 / T2 decoherence
+Pauli transfer matrices
+Readout error
+```
+</td><td valign="top">
+
+**🛡️ Error correction & NISQ**
+
+```text
+Bit-flip & phase-flip codes
+Shor 9-qubit code
+Syndrome measurement
+Stabilizers
+Break-even threshold
+Variational circuits (VQE)
+QAOA / MaxCut
+Barren plateaus
+Ansatz design
+Approximation ratio
+```
+</td><td valign="top">
+
+**🛠️ Engineering**
+
+```text
+Qiskit 2.x primitives (V2)
+SamplerV2 / EstimatorV2
+qiskit.quantum_info
+AerSimulator & noise models
+PassManager & opt levels
+Dynamic circuits (if_test)
+Statevector simulation
+Reproducible seeding
+nbformat notebook generation
+Headless nbconvert CI
+Perceptual colormap design
+```
+</td></tr>
+</table>
+
+**Bell inequalities & CHSH**, **Haar-random sampling**, **Schmidt rank**,
+**continued fractions**, and **the exponential simulation wall** get their own
+treatment too — see the notebook index below.
+
+---
+
 ## The visual language
 
 Four ideas recur across all thirty notebooks.
