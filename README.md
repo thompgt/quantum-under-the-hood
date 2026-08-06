@@ -196,7 +196,7 @@ derive with a pen.*
 | # | Notebook | What you'll see |
 |---|---|---|
 | B13 | [Qiskit Tour: Circuits, Statevector, Operator](notebooks/B13_Qiskit_Tour.ipynb) | One Bell state in five renderings — the repo's visualization index card |
-| B14 | The Visualization Suite | Why `plot_bloch_multivector` **lies about entanglement**, shown side by side |
+| B14 | [The Visualization Suite](notebooks/B14_Visualization_Suite.ipynb) | Why `plot_bloch_multivector` **lies about entanglement**, shown side by side |
 | B15 | [Single-Qubit Gates in Qiskit](notebooks/B15_Single_Qubit_Gates_Qiskit.ipynb) | A 12-gate contact sheet; an `Operator.equiv` heatmap that discovers gate identities |
 | B16 | [Measurement with SamplerV2](notebooks/B16_Measurement_SamplerV2.ipynb) | The raw shot record as a bitmap — the actual randomness, which tutorials never show |
 | B17 | [Multi-Qubit Circuits and Ordering](notebooks/B17_Multi_Qubit_Ordering.ipynb) | The endianness trap, with the wrong answer struck through |
