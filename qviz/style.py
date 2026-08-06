@@ -112,8 +112,11 @@ def _build_phase_cmap(n=512, lightness=0.62, chroma=0.125, hue_offset_deg=25.0):
 
     Chroma is held at ``chroma`` wherever the sRGB gamut allows and reduced only
     where it must be — lightness stays constant everywhere, which is what makes
-    every phase equally readable. ``hue_offset_deg`` places phase 0 on a blue that
-    matches the repo's primary series colour.
+    every phase equally readable. ``hue_offset_deg`` rotates which hue lands on
+    phase 0; at the default 25 deg that is a warm salmon, with pi falling on
+    teal. What matters is not the hue names but that 0 and pi -- a sign flip,
+    the most common distinction in a real statevector -- sit far apart
+    (deltaE 11.5), and that no phase gets a washed-out colour.
     """
     h = np.linspace(0.0, 2 * np.pi, n, endpoint=False) + np.deg2rad(hue_offset_deg)
     cols = np.empty((n, 3))
@@ -142,9 +145,9 @@ def use():
     import matplotlib as mpl
 
     mpl.rcParams.update({
-        # Size budget: dpi 110, not 200. 30 notebooks x many figures must stay
-        # under ~500 KB each, and a 300-dpi PNG is ~10x the bytes for no gain
-        # on a screen.
+        # Size budget: dpi 110, not 200. The gate nudges at 700 KB per notebook
+        # and hard-fails at 2 MB, and a 300-dpi PNG is ~10x the bytes for no
+        # gain on a screen.
         "figure.dpi": 110,
         "savefig.dpi": 110,
         "figure.figsize": (7.0, 4.2),
@@ -194,12 +197,18 @@ def use():
 
 
 def title(ax, headline, sub=None):
-    """Left-aligned headline with an optional muted subtitle underneath."""
-    ax.set_title(headline, loc="left", color=INK)
+    """Left-aligned headline with an optional muted subtitle underneath.
+
+    ``ax.title.set_position`` is a no-op under constrained layout, which
+    ``use()`` turns on -- so lifting the headline out of the subtitle's way has
+    to be done with title padding instead, or the two texts overprint.
+    """
     if sub:
+        ax.set_title(headline, loc="left", color=INK, pad=20)
         ax.text(0.0, 1.015, sub, transform=ax.transAxes, ha="left", va="bottom",
                 fontsize=8.5, color=MUTED)
-        ax.title.set_position((0.0, 1.10))
+    else:
+        ax.set_title(headline, loc="left", color=INK)
     return ax
 
 
@@ -230,3 +239,26 @@ def phase_wheel(ax, label="phase  arg(amplitude)"):
     if label:
         ax.set_title(label, fontsize=8.5, color=MUTED, loc="center", pad=6)
     return ax
+
+
+def qiskit_grid(fig, **adjust):
+    """Prepare a figure that will host Qiskit's own visualizers.
+
+    Every ``qiskit.visualization`` plotter calls ``fig.tight_layout()``
+    internally, which fights the constrained layout ``use()`` turns on: panels
+    overflow the right edge and axis decorations get clipped. Switching the
+    layout engine off and positioning explicitly is the only reliable fix.
+
+    Note that ``plot_state_qsphere`` cannot be composed at all -- it takes
+    ``ax`` only to find the figure, then lays its own 3x3 gridspec over
+    everything already drawn. Give it a figure of its own.
+
+    Also: matplotlib keeps three title artists per axis. Qiskit writes the
+    centred one while this repo's rcParams default to left, so a ``set_title``
+    after a Qiskit call leaves both texts overprinting. Clear the centre one
+    with ``ax.set_title("", loc="center")`` first.
+    """
+    fig.set_layout_engine("none")
+    if adjust:
+        fig.subplots_adjust(**adjust)
+    return fig

@@ -57,6 +57,26 @@ wrong attribute is an `AttributeError`, not a wrong number — but only at runti
 `options={"backend_options": {"seed_simulator": N}}`. Go through
 `qviz.backends.sampler()` / `.estimator()` and you get this right for free.
 
+**Aer's `EstimatorV2` does not sample — it fabricates the error bar.** It calls
+`save_expectation_value` for the exact value, then draws once from
+`N(expval, precision)`. Its `stds` field is literally the `precision` you passed
+in, not a computed uncertainty, and it will happily return |E| > 1. Never present
+that number as a shot-noise error bar. Use `precision=0.0` for the exact curve
+and take real uncertainties from `SamplerV2` shot records (B19 does this).
+
+**Aer cannot execute an anonymous controlled subcircuit.** `sub.to_gate().control(1)`
+gives a correct `Operator` but raises `AerError: unknown instruction: ccircuit-NNN`
+inside a primitive. Library gates — `PhaseGate(t).control(1)`, `RZGate(t).control(1)`
+— work. Likewise any non-basis instruction (e.g. `StatePreparation`) must be
+`transpile`d before it reaches a primitive.
+
+**Qiskit's own visualizers fight the repo's layout.** Every `qiskit.visualization`
+plotter calls `fig.tight_layout()` internally, which collides with the constrained
+layout `style.use()` enables — panels overflow and decorations clip. Use
+`style.qiskit_grid(fig, ...)`. `plot_state_qsphere` cannot be composed into a
+subplot grid at all: it takes `ax` only to find the figure, then lays its own 3x3
+gridspec over everything. Give it its own figure.
+
 ## 3. Endianness — decided once, for the whole repo
 
 **Qiskit is little-endian and Track A matches it.** Statevector index `i` maps to
@@ -94,9 +114,10 @@ every rebuild produces a different diff and review becomes impossible.
 `qviz` is the shared **drawing** layer and is **frozen** during notebook
 authoring — do not edit it. If you need a change, say so in your final message
 and the orchestrator will apply it between waves. That is how `signed_bars`,
-`matrix(part="nonzero")`, `sphere(zoom=)` and the `ylabel=`/`tick_every=`
-pass-throughs on `amp_bars`/`prob_bars` got there — check whether the helper you
-want already exists before writing it inline.
+`matrix(part="nonzero")`, `sphere(zoom=)`, `grid.bit_record`, `grid.strike`,
+`style.qiskit_grid` and the `ylabel=`/`tick_every=` pass-throughs on
+`amp_bars`/`prob_bars` got there — check whether the helper you want already
+exists before writing it inline.
 
 The hard rule: **`qviz` must never compute quantum mechanics for a Track A
 notebook.** If A03 imported `apply_gate` from a helper, the notebook would stop
@@ -110,6 +131,11 @@ course use `qiskit.quantum_info` — that IS its subject.
   `nbformat`; `tools/build.py` runs it and executes the result. Hand-written
   notebook JSON breaks on LaTeX escaping and is unreviewable in a diff.
 - Generators must be **idempotent** — running twice gives the same notebook.
+- **Build with `.venv/Scripts/python tools/build.py`, not bare `python`.** Bare
+  `python` may resolve to the system interpreter, which finds `nbformat` in user
+  site-packages and so *lints* fine — but generation sets `PYTHONNOUSERSITE=1`
+  and fails with `ModuleNotFoundError: traitlets`. A clean lint from the wrong
+  interpreter is the trap.
 - **Write cell sources as raw strings** (`r'''...'''`) rather than escaping
   backslashes. `r"$\pi$"` beats `"$\\\\pi$"`; the emitted notebook is identical
   and the generator stays reviewable. A01 predates this and still uses the

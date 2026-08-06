@@ -232,7 +232,8 @@ def signed_bars(ax, amps, *, labels=None, n_qubits=None, mean=True,
 
 def matrix(ax, M, *, part="re", labels=None, annot=None, cbar=True,
            vmax=None, title=None, grid_lines=True, fmt="{:.2f}",
-           hide_zeros=True, annot_size=6.5):
+           hide_zeros=True, annot_size=6.5, tick_size=None,
+           tick_rotation=None):
     """Matrix heatmap.
 
     ``part`` is one of ``"re"``, ``"im"``, ``"abs"``, ``"phase"``,
@@ -247,6 +248,11 @@ def matrix(ax, M, *, part="re", labels=None, annot=None, cbar=True,
 
     ``annot_size`` is the annotation font size; bump it when a small matrix is
     blown up to a large panel.
+
+    ``tick_size`` and ``tick_rotation`` override the tick-label defaults, which
+    shrink and turn vertical past n = 8. Those defaults assume ket labels; for
+    short ones like ``q0``..``q11`` horizontal is strictly more readable, so
+    pass ``tick_rotation=0``.
     """
     M = np.asarray(M)
     n = M.shape[0]
@@ -275,7 +281,8 @@ def matrix(ax, M, *, part="re", labels=None, annot=None, cbar=True,
         cmap = SEQ
         kw = dict(vmin=0, vmax=1)
     else:
-        raise ValueError(f"part must be re/im/abs/phase, got {part!r}")
+        raise ValueError(
+            f"part must be re/im/abs/phase/nonzero, got {part!r}")
 
     cmap = cmap.copy()
     cmap.set_bad(GRID)
@@ -286,8 +293,9 @@ def matrix(ax, M, *, part="re", labels=None, annot=None, cbar=True,
     if labels is not None:
         ax.set_xticks(range(n))
         ax.set_yticks(range(n))
-        size = 8 if n <= 8 else 6
-        ax.set_xticklabels(labels, fontsize=size, rotation=90 if n > 8 else 0)
+        size = tick_size if tick_size is not None else (8 if n <= 8 else 6)
+        rot = tick_rotation if tick_rotation is not None else (90 if n > 8 else 0)
+        ax.set_xticklabels(labels, fontsize=size, rotation=rot)
         ax.set_yticklabels(labels, fontsize=size)
     else:
         ax.set_xticks([])
@@ -397,4 +405,71 @@ def annotate(ax, text, xy, xytext, *, color=None, size=8.5, arrow=True):
                 ha="left", va="center",
                 arrowprops=dict(arrowstyle="-", color=color, lw=0.9,
                                 shrinkA=2, shrinkB=3) if arrow else None)
+    return ax
+
+
+def bit_record(ax, bits, *, col_labels=None, row_every=None, seps=True,
+               title=None, ylabel="shot", xlabel=None, on=None, off=None):
+    """Raw per-shot measurement record as a bitmap. DRAWING ONLY.
+
+    ``bits`` is a ``(shots, n_bits)`` array of 0/1. One pixel per measured bit,
+    one row per shot -- the randomness itself, before a histogram averages it
+    away. A Bell pair shows up as two pixel-identical columns, which no
+    marginal can express; B16 and B18 both wanted this, which is why it lives
+    here rather than in a notebook.
+
+    ``seps`` draws surface-coloured hairlines between columns so adjacent
+    columns stay countable.
+    """
+    from matplotlib.colors import ListedColormap
+
+    from qviz.style import BLUE
+
+    bits = np.asarray(bits)
+    shots, nbits = bits.shape
+    cmap = ListedColormap([off or GRID, on or BLUE])
+    im = ax.imshow(bits, cmap=cmap, vmin=0, vmax=1, aspect="auto",
+                   interpolation="nearest")
+
+    ax.set_xticks(range(nbits))
+    ax.set_xticklabels(col_labels or [f"q{i}" for i in range(nbits)],
+                       fontsize=7, rotation=0)
+    if row_every is None:
+        row_every = max(1, int(round(shots / 8)))
+    rows = list(range(0, shots, row_every))
+    ax.set_yticks(rows)
+    ax.set_yticklabels([str(r) for r in rows], fontsize=7)
+
+    if seps and nbits > 1:
+        for x in np.arange(0.5, nbits - 0.5, 1.0):
+            ax.axvline(x, color=SURFACE, lw=1.0)
+
+    ax.set_ylabel(ylabel)
+    if xlabel:
+        ax.set_xlabel(xlabel)
+    if title:
+        ax.set_title(title, loc="left", fontsize=10, color=INK)
+    return im
+
+
+def strike(ax, artist, *, color=None, pad=0.06, lw=1.6):
+    r"""Draw a line through a text artist -- "this is the wrong answer".
+
+    matplotlib has no strikethrough and mathtext has no ``\sout``, so this
+    forces a draw, converts the artist's window extent back into data
+    coordinates and rules a line across the middle. Call it after the layout is
+    settled; if you move the axis afterwards, call it again.
+    """
+    from qviz.style import RED
+
+    color = color or RED
+    fig = ax.figure
+    fig.canvas.draw()
+    bb = artist.get_window_extent(renderer=fig.canvas.get_renderer())
+    inv = ax.transData.inverted()
+    (x0, y0), (x1, y1) = inv.transform([(bb.x0, bb.y0), (bb.x1, bb.y1)])
+    mid = 0.5 * (y0 + y1)
+    dx = (x1 - x0) * pad
+    ax.plot([x0 - dx, x1 + dx], [mid, mid], color=color, lw=lw,
+            zorder=artist.get_zorder() + 1, solid_capstyle="round")
     return ax
