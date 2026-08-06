@@ -179,11 +179,11 @@ derive with a pen.*
 | # | Notebook | What you'll see |
 |---|---|---|
 | A01 | [Complex Amplitudes and the Qubit State](notebooks/A01_Complex_Amplitudes.ipynb) | Amplitudes as arrows in ℂ; the signature phase-hue bars; why global phase is invisible but relative phase is everything |
-| A02 | The Bloch Sphere, Built From Scratch | A hand-rolled sphere; Haar-random states vs. naive (θ,φ) sampling and the pole-clustering it causes |
-| A03 | Single-Qubit Gates as 2×2 Unitaries | Gate matrices as heatmaps; Bloch trajectories as frame grids; a commutator heatmap showing what doesn't commute |
-| A04 | Measurement, Sampling, and Collapse | Shot-convergence fan chart with the ±1/√N envelope; collapse drawn on three spheres |
-| A05 | Tensor Products and Multi-Qubit States | The `kron` block structure made visible; the endianness Rosetta table; where your laptop dies |
-| A06 | Two-Qubit Gates and Controlled Operations | Block structure of CNOT/CZ/SWAP; the 8×8 Toffoli; gates as permutation graphs |
+| A02 | [The Bloch Sphere, Built From Scratch](notebooks/A02_Bloch_Sphere.ipynb) | A hand-rolled sphere; Haar-random states vs. naive (θ,φ) sampling and the pole-clustering it causes |
+| A03 | [Single-Qubit Gates as 2×2 Unitaries](notebooks/A03_Single_Qubit_Gates.ipynb) | Gate matrices as heatmaps; Bloch trajectories as frame grids; a commutator heatmap showing what doesn't commute |
+| A04 | [Measurement, Sampling, and Collapse](notebooks/A04_Measurement.ipynb) | Shot-convergence fan chart with the ±1/√N envelope; collapse drawn on three spheres |
+| A05 | [Tensor Products and Multi-Qubit States](notebooks/A05_Tensor_Products.ipynb) | The `kron` block structure made visible; the endianness Rosetta table; where your laptop dies |
+| A06 | [Two-Qubit Gates and Controlled Operations](notebooks/A06_Two_Qubit_Gates.ipynb) | Block structure of CNOT/CZ/SWAP; the 8×8 Toffoli; gates as permutation graphs |
 | A07 | [A Tiny Statevector Simulator](notebooks/A07_Statevector_Simulator.ipynb) | Reshape-and-tensordot vs. naive kron, benchmarked; the 2ⁿ-vs-4ⁿ wall |
 | A08 | [Interference and Phase Kickback](notebooks/A08_Interference_Phase_Kickback.ipynb) | Amplitudes added head-to-tail in ℂ; the interference waterfall |
 | A09 | [Deutsch–Jozsa and Bernstein–Vazirani](notebooks/A09_Deutsch_Jozsa_Bernstein_Vazirani.ipynb) | Amplitude-evolution filmstrips; 16 secrets recovered as one binary image |
@@ -195,7 +195,7 @@ derive with a pen.*
 
 | # | Notebook | What you'll see |
 |---|---|---|
-| B13 | Qiskit Tour: Circuits, Statevector, Operator | One Bell state in five renderings — the repo's visualization index card |
+| B13 | [Qiskit Tour: Circuits, Statevector, Operator](notebooks/B13_Qiskit_Tour.ipynb) | One Bell state in five renderings — the repo's visualization index card |
 | B14 | The Visualization Suite | Why `plot_bloch_multivector` **lies about entanglement**, shown side by side |
 | B15 | Single-Qubit Gates in Qiskit | A 12-gate contact sheet; an `Operator.equiv` heatmap that discovers gate identities |
 | B16 | Measurement with SamplerV2 | The raw shot record as a bitmap — the actual randomness, which tutorials never show |
