@@ -201,7 +201,7 @@ derive with a pen.*
 | B16 | [Measurement with SamplerV2](notebooks/B16_Measurement_SamplerV2.ipynb) | The raw shot record as a bitmap — the actual randomness, which tutorials never show |
 | B17 | [Multi-Qubit Circuits and Ordering](notebooks/B17_Multi_Qubit_Ordering.ipynb) | The endianness trap, with the wrong answer struck through |
 | B18 | [Entanglement and Bell States](notebooks/B18_Entanglement_Bell_States.ipynb) | An entanglement dial: entropy, concurrence and Bloch-vector length as one knob turns |
-| B19 | Bell Inequalities and CHSH | The money shot — S rising above the classical bound of 2 toward 2√2, then dying under noise |
+| B19 | [Bell Inequalities and CHSH](notebooks/B19_Bell_Inequalities_CHSH.ipynb) | The money shot — S rising above the classical bound of 2 toward 2√2, then dying under noise |
 | B20 | Interference and Phase Kickback in Qiskit | A Ramsey interferogram, and its fringe contrast collapsing under dephasing |
 | B21 | Deutsch–Jozsa and Bernstein–Vazirani in Qiskit | Oracles as circuits; the one-query punchline |
 | B22 | Grover in Qiskit | The Grover heatmap: iteration × basis state, marked column brightening |
