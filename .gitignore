@@ -8,4 +8,4 @@ dist/
 *.egg-info/
 .DS_Store
 Thumbs.db
-_peek/
+_peek*/
