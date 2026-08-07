@@ -203,7 +203,7 @@ derive with a pen.*
 | B18 | [Entanglement and Bell States](notebooks/B18_Entanglement_Bell_States.ipynb) | An entanglement dial: entropy, concurrence and Bloch-vector length as one knob turns |
 | B19 | [Bell Inequalities and CHSH](notebooks/B19_Bell_Inequalities_CHSH.ipynb) | The money shot — S rising above the classical bound of 2 toward 2√2, then dying under noise |
 | B20 | Interference and Phase Kickback in Qiskit | A Ramsey interferogram, and its fringe contrast collapsing under dephasing |
-| B21 | Deutsch–Jozsa and Bernstein–Vazirani in Qiskit | Oracles as circuits; the one-query punchline |
+| B21 | [Deutsch–Jozsa and Bernstein–Vazirani in Qiskit](notebooks/B21_Deutsch_Jozsa_Bernstein_Vazirani_Qiskit.ipynb) | Oracles as circuits; the one-query punchline |
 | B22 | Grover in Qiskit | The Grover heatmap: iteration × basis state, marked column brightening |
 | B23 | QFT and Phase Estimation in Qiskit | Qiskit's QFT beside the hand-built one, with a 1e-16 diff panel |
 | B24 | Shor's Order Finding (N = 15, 21) | Honest success rates over every base; and how far RSA-2048 really is |
