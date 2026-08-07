@@ -565,9 +565,11 @@ destroys the swirl completely.
 
 There is a defensible engineering choice hiding here: since the swaps are pure
 relabelling, a compiler can often **delete the swap layer and renumber the wires
-instead**, which is free. Qiskit's `QFTGate` has a `do_swaps` flag for exactly
-this reason, and B23 puts the two side by side. What you must not do is delete
-the layer and *forget* you did."""))
+instead**, which is free. Qiskit exposes exactly that: `synth_qft_full(n,
+do_swaps=False)` builds the swap-free version, and B23 puts the two side by
+side. (The flag lives on the synthesis function, not on `QFTGate` itself, which
+in Qiskit 2.5 takes only `num_qubits`.) What you must not do is delete the layer
+and *forget* you did."""))
 
 # ------------------------------------------------------------------ QPE setup
 cells.append(md(r"""## Phase estimation: the setup
