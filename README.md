@@ -202,7 +202,7 @@ derive with a pen.*
 | B17 | [Multi-Qubit Circuits and Ordering](notebooks/B17_Multi_Qubit_Ordering.ipynb) | The endianness trap, with the wrong answer struck through |
 | B18 | [Entanglement and Bell States](notebooks/B18_Entanglement_Bell_States.ipynb) | An entanglement dial: entropy, concurrence and Bloch-vector length as one knob turns |
 | B19 | [Bell Inequalities and CHSH](notebooks/B19_Bell_Inequalities_CHSH.ipynb) | The money shot — S rising above the classical bound of 2 toward 2√2, then dying under noise |
-| B20 | Interference and Phase Kickback in Qiskit | A Ramsey interferogram, and its fringe contrast collapsing under dephasing |
+| B20 | [Interference and Phase Kickback in Qiskit](notebooks/B20_Interference_Phase_Kickback_Qiskit.ipynb) | A Ramsey interferogram, and its fringe contrast collapsing under dephasing |
 | B21 | [Deutsch–Jozsa and Bernstein–Vazirani in Qiskit](notebooks/B21_Deutsch_Jozsa_Bernstein_Vazirani_Qiskit.ipynb) | Oracles as circuits; the one-query punchline |
 | B22 | Grover in Qiskit | The Grover heatmap: iteration × basis state, marked column brightening |
 | B23 | [QFT and Phase Estimation in Qiskit](notebooks/B23_QFT_Phase_Estimation_Qiskit.ipynb) | Qiskit's QFT beside the hand-built one, with a 1e-16 diff panel |
