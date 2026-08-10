@@ -206,7 +206,7 @@ derive with a pen.*
 | B21 | [Deutsch–Jozsa and Bernstein–Vazirani in Qiskit](notebooks/B21_Deutsch_Jozsa_Bernstein_Vazirani_Qiskit.ipynb) | Oracles as circuits; the one-query punchline |
 | B22 | [Grover in Qiskit](notebooks/B22_Grover_Qiskit.ipynb) | The Grover heatmap: iteration × basis state, marked column brightening |
 | B23 | [QFT and Phase Estimation in Qiskit](notebooks/B23_QFT_Phase_Estimation_Qiskit.ipynb) | Qiskit's QFT beside the hand-built one, with a 1e-16 diff panel |
-| B24 | Shor's Order Finding (N = 15, 21) | Honest success rates over every base; and how far RSA-2048 really is |
+| B24 | [Shor's Order Finding (N = 15, 21)](notebooks/B24_Shor_Order_Finding.ipynb) | Honest success rates over every base; and how far RSA-2048 really is |
 | B25 | Teleportation and Superdense Coding | Fidelity over 20 random states; dynamic circuits with `if_test` |
 | B26 | Density Matrices and Noise in Qiskit | Pauli transfer matrices — the cleanest picture of what a channel *is*; T1/T2 decay fits |
 
