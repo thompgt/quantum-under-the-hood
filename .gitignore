@@ -9,3 +9,6 @@ dist/
 .DS_Store
 Thumbs.db
 _peek*/
+# build.py executes a copy and moves it into place only on success; this is
+# that copy, left behind only if the build was hard-killed mid-execution.
+notebooks/_executing_*.ipynb

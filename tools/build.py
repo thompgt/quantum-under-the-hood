@@ -16,6 +16,7 @@ import argparse
 import io
 import os
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -117,6 +118,16 @@ def execute(nb_id, timeout=900):
                QUTH_MAX_THREADS=os.environ.get("QUTH_MAX_THREADS", "2"),
                OMP_NUM_THREADS=os.environ.get("QUTH_MAX_THREADS", "2"))
     env.pop("MPLBACKEND", None)
+    # Execute a COPY and move it into place only on success. `--inplace` on the
+    # real path leaves a half-executed notebook behind when a cell raises, and
+    # main() skips lint() on an execute failure -- so the damage would ship
+    # unlinted, invisibly, since .gitattributes marks .ipynb as -diff.
+    # The copy lives beside the original: nbconvert runs the kernel with the
+    # notebook's own directory as cwd, and a few notebooks rely on that.
+    # Named so that notebook_path()'s "<ID>_*.ipynb" glob cannot pick up a
+    # stray copy left behind by a hard kill.
+    tmp = path.with_name(f"_executing_{nb_id}.ipynb")
+    shutil.copyfile(path, tmp)
     # `-m nbconvert`, not `-m jupyter nbconvert`: the jupyter dispatcher shells
     # out to whichever jupyter-nbconvert.EXE is first on PATH, which on this
     # machine is the system one.
@@ -124,12 +135,18 @@ def execute(nb_id, timeout=900):
            "--execute", "--inplace",
            f"--ExecutePreprocessor.timeout={timeout}",
            f"--ExecutePreprocessor.kernel_name={KERNEL}",
-           str(path)]
-    r = subprocess.run(cmd, cwd=str(ROOT), env=env, capture_output=True,
-                       text=True, encoding="utf-8", errors="replace")
+           str(tmp)]
+    try:
+        r = subprocess.run(cmd, cwd=str(ROOT), env=env, capture_output=True,
+                           text=True, encoding="utf-8", errors="replace")
+    except BaseException:
+        tmp.unlink(missing_ok=True)
+        raise
     if r.returncode != 0:
+        tmp.unlink(missing_ok=True)
         tail = ((r.stdout or "") + (r.stderr or "")).strip().splitlines()
         return False, "\n".join(tail[-40:])
+    os.replace(tmp, path)
     return True, ""
 
 
