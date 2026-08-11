@@ -1111,11 +1111,23 @@ run it: pick a random base, run the circuit, post-process, and if it fails, try
 again. The lcm trick from Part 6 is in there — two runs whose denominators are
 different divisors of $r$ often reconstruct $r$ between them.
 
-The counter this prints is the honest cost: **how many circuit executions it took
-to factor a two-digit number.**"""))
+One clarification before the numbers. `shor_once` does **not** call the simulator
+again. It draws `m` from `dirichlet_probs` — the closed form for the counting
+register's distribution, which Part 3 and the checkpoint both verify against the
+statevector of the real order-finding circuit to better than `1e-9`. Sampling the
+exact distribution is statistically identical to running the circuit and is what
+makes 300 full factorizations fit in one cell.
+
+So the counter is the honest cost — **how many circuit executions a real
+implementation would need to factor a two-digit number** — but each of those is a
+draw from the verified distribution rather than an Aer run."""))
 
 cells.append(code(r'''def shor_once(N, a, t, rng):
-    """One circuit execution: returns the integer m, sampled properly."""
+    """One circuit run's worth of measurement.
+
+    Draws m from the exact QPE distribution rather than re-running the
+    simulator -- the two are the same distribution, checked to 1e-9 above.
+    """
     p = dirichlet_probs(order(a, N), t)
     return int(rng.choice(len(p), p=p / p.sum()))
 
