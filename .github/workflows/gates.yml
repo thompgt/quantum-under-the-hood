@@ -1,0 +1,67 @@
+name: gates
+
+# The three gates the README describes, run on every push and PR so that
+# "nothing stale can ship" is enforced rather than asserted.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: gates-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gates:
+    name: smoke, style and lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install the pinned environment
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e .
+
+      - name: Smoke gate - the Qiskit API surface the notebooks depend on
+        run: python tools/smoke_gate.py
+
+      - name: Style gate - the phase colormap properties the README states as fact
+        run: python tools/check_style.py
+
+      - name: Lint gate - dead APIs, seeding, links, figures, size
+        run: python tools/build.py --lint-only
+
+  execute:
+    name: headless nbconvert (A01, B13)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install the pinned environment
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e .
+
+      - name: Register the quth kernel
+        run: python -m ipykernel install --user --name quth
+
+      # Regenerate and execute one notebook from each track. Executing all 24
+      # would run for over an hour; these two cover the whole path -- generator
+      # -> nbformat -> nbconvert -> lint -- for pure-NumPy and for Qiskit.
+      - name: Generate, execute and lint A01 and B13
+        run: python tools/build.py A01 B13

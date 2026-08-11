@@ -268,6 +268,17 @@ that raised, a cross-notebook link that doesn't resolve on disk, or a file over
 2 MB. It also runs `tools/check_style.py` first, which re-measures the two phase
 colormap properties claimed above (`--no-style` skips it).
 
+### CI
+
+[`.github/workflows/gates.yml`](.github/workflows/gates.yml) runs on every push
+and pull request:
+
+- **smoke, style and lint** — `tools/smoke_gate.py`, `tools/check_style.py` and
+  `tools/build.py --lint-only` over all 24 notebooks.
+- **headless nbconvert** — regenerates and executes A01 and B13 from their
+  generators under the `quth` kernel, one notebook from each track. Executing
+  all 24 would run for over an hour; these two cover the whole path.
+
 ---
 
 ## Two decisions worth knowing about
