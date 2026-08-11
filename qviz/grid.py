@@ -385,7 +385,11 @@ def show_state(vec, *, n_show=8, precision=4, n_qubits=None):
     if n_qubits is None:
         n_qubits = int(np.log2(len(v)))
     order = np.argsort(-np.abs(v))
-    keep = sorted(i for i in order if abs(v[i]) > 1e-10)[:n_show]
+    # Slice FIRST (largest amplitudes win a slot), THEN sort the survivors by
+    # index so they print in basis order. Sorting before slicing would keep the
+    # n_show lowest-indexed non-zeros instead -- a vector whose only large
+    # amplitude sits at a high index would print none of it.
+    keep = sorted([i for i in order if abs(v[i]) > 1e-10][:n_show])
     parts = []
     for i in keep:
         a = complex(v[i])
