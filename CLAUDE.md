@@ -151,10 +151,11 @@ course use `qiskit.quantum_info` — that IS its subject.
 - **No literal `⟩` (U+27E9) in figure text** — missing from Segoe UI, renders as
   a tofu box. Use `qviz.grid.ket("01")` or mathtext `$|01\rangle$`. In markdown
   cells the Unicode character is fine.
-- Figures: `dpi=110`. The gate nudges at 700 KB per notebook and hard-fails at
-  2 MB. Going over the nudge is acceptable for a genuinely 3-D-heavy notebook
-  (A02, A12) — say why in the commit message rather than cutting a figure or
-  flattening the render to squeeze under it.
+- Figures: `dpi=110`. The gate nudges at 900 KB per notebook and hard-fails at
+  2 MB. Only B14 is over the nudge today — it renders every Qiskit visualizer
+  side by side, which is the notebook's whole subject. Going over is acceptable
+  for a genuinely figure-heavy notebook — say why in the commit message rather
+  than cutting a figure or flattening the render to squeeze under it.
   `rasterized=True` on scatter plots over ~5k points. One figure with subplots,
   never 16 separate figures. `plt.close(fig)` inside loops.
 - Never print a full statevector past a few qubits — use `qviz.grid.show_state`.

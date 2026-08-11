@@ -27,7 +27,11 @@ GEN_DIR = ROOT / "tools" / "gen"
 NB_DIR = ROOT / "notebooks"
 
 MAX_BYTES = 2 * 1024 * 1024      # hard fail
-WARN_BYTES = 700 * 1024          # nudge
+# Nudge. 700 KB flagged 9 of 24 notebooks, only two of which were ever
+# sanctioned -- a warning that fires on a third of the corpus is one nobody
+# reads. 900 KB clears the figure-dense-but-normal band (A02, A12 sit just
+# under) and leaves B14 as the single genuine outlier.
+WARN_BYTES = 900 * 1024
 
 # Kernel registered from the repo venv:
 #   .venv/Scripts/python -m ipykernel install --user --name quth
