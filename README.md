@@ -1,8 +1,12 @@
 # Quantum Under The Hood
 
-**Learn quantum computing by seeing it.** Thirty Jupyter notebooks that teach every
+**Learn quantum computing by seeing it.** Jupyter notebooks that teach every
 concept twice — once by building it from scratch in NumPy, once with the real
 Qiskit SDK — with the visualization doing the explaining.
+
+**24 of a planned 30 are written.** Everything in Tracks A and B up to B24 is
+finished and executed; the rows marked *planned* below are not written yet and
+are listed so you can see where this is going.
 
 Every notebook is committed **already executed**, so you can read the whole thing
 on GitHub without installing anything.
@@ -146,7 +150,7 @@ treatment too — see the notebook index below.
 
 ## The visual language
 
-Four ideas recur across all thirty notebooks.
+Four ideas recur across every notebook.
 
 **Amplitude bars.** A complex vector drawn in one picture: bar height is
 `|amplitude|`, bar colour is the phase, and a little clock hand on top repeats
@@ -207,17 +211,18 @@ derive with a pen.*
 | B22 | [Grover in Qiskit](notebooks/B22_Grover_Qiskit.ipynb) | The Grover heatmap: iteration × basis state, marked column brightening |
 | B23 | [QFT and Phase Estimation in Qiskit](notebooks/B23_QFT_Phase_Estimation_Qiskit.ipynb) | Qiskit's QFT beside the hand-built one, with a 1e-16 diff panel |
 | B24 | [Shor's Order Finding (N = 15, 21)](notebooks/B24_Shor_Order_Finding.ipynb) | Honest success rates over every base; and how far RSA-2048 really is |
-| B25 | Teleportation and Superdense Coding | Fidelity over 20 random states; dynamic circuits with `if_test` |
-| B26 | Density Matrices and Noise in Qiskit | Pauli transfer matrices — the cleanest picture of what a channel *is*; T1/T2 decay fits |
+| B25 | Teleportation and Superdense Coding *(planned)* | Fidelity over 20 random states; dynamic circuits with `if_test` |
+| B26 | Density Matrices and Noise in Qiskit *(planned)* | Pauli transfer matrices — the cleanest picture of what a channel *is*; T1/T2 decay fits |
 
 ### Track C — Capstones
+*Not written yet — planned.*
 
 | # | Notebook | What you'll see |
 |---|---|---|
-| C27 | Error Correction: Bit-Flip, Phase-Flip, Shor-9 | Logical vs. physical error rate, with the break-even crossing and the region where **QEC makes things worse** |
-| C28 | Variational Circuits and VQE (H₂) | The H₂ dissociation curve against exact diagonalization; barren plateaus, measured |
-| C29 | QAOA on MaxCut | Probability mass migrating toward good cuts as depth grows |
-| C30 | Transpilation, Optimization, Simulator Limits | SWAP routing on the coupling graph; why Clifford circuits simulate in polynomial time; *50 qubits = 16 PB* |
+| C27 | Error Correction: Bit-Flip, Phase-Flip, Shor-9 *(planned)* | Logical vs. physical error rate, with the break-even crossing and the region where **QEC makes things worse** |
+| C28 | Variational Circuits and VQE (H₂) *(planned)* | The H₂ dissociation curve against exact diagonalization; barren plateaus, measured |
+| C29 | QAOA on MaxCut *(planned)* | Probability mass migrating toward good cuts as depth grows |
+| C30 | Transpilation, Optimization, Simulator Limits *(planned)* | SWAP routing on the coupling graph; why Clifford circuits simulate in polynomial time; *50 qubits = 16 PB* |
 
 ---
 
@@ -281,7 +286,7 @@ regression test.
 ## Layout
 
 ```
-notebooks/     A01..A12, B13..B26, C27..C30 — executed, outputs committed
+notebooks/     A01..A12, B13..B24 — executed, outputs committed (B25..C30 planned)
 qviz/          shared DRAWING layer (style, bloch, grid, backends)
 tools/gen/     one generator per notebook — the source of truth
 tools/         build.py, smoke_gate.py, check_style.py, peek.py
