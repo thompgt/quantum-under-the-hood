@@ -1476,7 +1476,7 @@ print(f"  ceiling E[phi(r)/r]              : "
 
 cells.append(md(r"""---
 
-**Next:** [B25 — Teleportation and Superdense Coding](B25_Teleportation_Superdense.ipynb).
+**Next:** B25 — Teleportation and Superdense Coding *(planned — not written yet)*.
 Back to small circuits, but with a new ingredient: mid-circuit measurement and
 classical feed-forward, written with `with qc.if_test((creg, val))` — the
 replacement for the removed `.c_if`. Fidelity over 20 random states, and what

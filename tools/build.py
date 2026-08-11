@@ -59,6 +59,11 @@ DEAD_APIS = [
 # U+27E9/U+27E8 are missing from Segoe UI and rasterise as tofu in figures.
 TOFU = re.compile(r"[⟨⟩]")
 
+# Markdown links to another notebook. Every notebook ends with a "Next:" link,
+# and renaming a notebook without updating the ones pointing at it produces a
+# 404 that only a sequential reader ever hits -- the README index stays right.
+NB_LINK = re.compile(r"\]\(\s*(?!https?:)([^)\s#]+\.ipynb)[^)]*\)")
+
 # Mojibake: UTF-8 bytes that were decoded as cp1252 somewhere upstream. On
 # Windows, `Get-Content -Raw` / `Set-Content` in PowerShell 5.1 reads a BOM-less
 # UTF-8 file as ANSI and silently rewrites every non-ASCII character this way --
@@ -172,6 +177,15 @@ def lint(nb_id):
             problems.append(
                 f"mojibake in {where}: {sorted(seen)} -- a UTF-8 file was read as "
                 f"cp1252 (do not edit these through PowerShell text pipelines)")
+
+    # Cross-notebook links must resolve on disk. Relative to notebooks/, since
+    # that is where the .ipynb lives and how GitHub resolves the href.
+    if nb is not None:
+        prose = "\n".join(c.source for c in nb.cells if c.cell_type == "markdown")
+        for m in NB_LINK.finditer(prose):
+            target = m.group(1)
+            if not (NB_DIR / target).exists():
+                problems.append(f"dead notebook link: {target} does not exist")
 
     if nb is not None:
         if "seed" not in code and "default_rng" not in code:

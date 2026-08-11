@@ -1106,7 +1106,7 @@ cells.append(md(r"""---
 - The wall at ~29 qubits is real for *general* states. It is not a wall around
   every circuit, and the rest of the repo keeps returning to that distinction.
 
-**Next:** [A08 — Interference and Phase Kickback](A08_Interference.ipynb). We now
+**Next:** [A08 — Interference and Phase Kickback](A08_Interference_Phase_Kickback.ipynb). We now
 have a simulator fast enough to run circuits worth watching. So let's point it at
 the thing that makes quantum computing work at all: amplitudes cancelling."""))
 

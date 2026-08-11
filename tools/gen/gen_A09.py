@@ -1016,7 +1016,7 @@ print("A09 checkpoint passed.")'''))
 
 cells.append(md(r"""---
 
-**Next:** [A10 — Grover From Scratch](A10_Grover.ipynb). Deutsch–Jozsa got a
+**Next:** [A10 — Grover From Scratch](A10_Grover_From_Scratch.ipynb). Deutsch–Jozsa got a
 definite answer from one query because the interference was perfect: the wrong
 outcomes cancelled to exactly zero. That only works because the promise made the
 signs line up. Grover asks the harder question — *find the one input where

@@ -1210,7 +1210,7 @@ print(f"  P at k = {K_WORST}:            {P_HIT[K_WORST]:.9f}  "
 
 cells.append(md(r"""---
 
-**Next:** [B23 — QFT and Phase Estimation in Qiskit](B23_QFT_Phase_Estimation.ipynb).
+**Next:** [B23 — QFT and Phase Estimation in Qiskit](B23_QFT_Phase_Estimation_Qiskit.ipynb).
 Part 2 found $e^{\pm 2i\theta}$ sitting in the spectrum of the Grover operator, and
 $\theta$ is precisely the number you need in order to know when to stop. Phase
 estimation is the machine that reads an eigenphase off a unitary — so the fix for

@@ -1122,7 +1122,7 @@ print("A11 checkpoint passed.")'''))
 
 cells.append(md(r"""---
 
-**Next:** [A12 — Density Matrices, Mixed States, Noise Channels](A12_Density_Matrices.ipynb).
+**Next:** [A12 — Density Matrices, Mixed States, Noise Channels](A12_Density_Matrices_Noise.ipynb).
 Every state in this notebook was pure, and every gate was perfect. The leakage we
 measured was *structural* — it comes from the register being finite, not from
 anything going wrong. A12 introduces the other kind of imperfection, the kind an

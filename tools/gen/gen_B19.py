@@ -1329,7 +1329,7 @@ print(f"  2*sqrt(2)     = {TSIRELSON:.12f}")'''))
 
 cells.append(md(r"""---
 
-**Next:** [B20 — Interference and Phase Kickback in Qiskit](B20_Interference_Phase_Kickback.ipynb).
+**Next:** [B20 — Interference and Phase Kickback in Qiskit](B20_Interference_Phase_Kickback_Qiskit.ipynb).
 CHSH measured a *correlation* between two qubits. B20 goes back to one qubit and
 measures a *phase* — the Ramsey interferogram — and watches its fringe contrast
 collapse under dephasing in exactly the way the violation collapsed here."""))

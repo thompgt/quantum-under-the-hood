@@ -1064,7 +1064,7 @@ print("A08 checkpoint passed.")'''))
 
 cells.append(md(r"""---
 
-**Next:** [A09 — Deutsch–Jozsa and Bernstein–Vazirani](A09_Deutsch_Jozsa.ipynb).
+**Next:** [A09 — Deutsch–Jozsa and Bernstein–Vazirani](A09_Deutsch_Jozsa_Bernstein_Vazirani.ipynb).
 We now have the two ingredients of every quantum algorithm: a way to make paths
 cancel, and a way to write an answer onto a qubit nothing appeared to touch. A09
 spends exactly one oracle query with them, and gets an answer no classical
