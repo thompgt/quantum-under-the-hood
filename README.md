@@ -262,8 +262,10 @@ generator is the source of truth** — edit that, not the notebook. Hand-written
 notebook JSON breaks on LaTeX escaping and is unreviewable in a diff.
 
 The build gate fails on: any dead Qiskit API, a notebook with no figures, an
-unseeded RNG, a cell that raised, a cross-notebook link that doesn't resolve on
-disk, or a file over 2 MB.
+unseeded RNG or primitive (`default_rng()` with no argument, an unseeded
+Sampler/Estimator, a targeted `transpile()` with no `seed_transpiler`), a cell
+that raised, a cross-notebook link that doesn't resolve on disk, or a file over
+2 MB.
 
 ---
 

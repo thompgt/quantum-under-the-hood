@@ -73,6 +73,72 @@ NB_LINK = re.compile(r"\]\(\s*(?!https?:)([^)\s#]+\.ipynb)[^)]*\)")
 MOJIBAKE = re.compile(r"â€|Ã[©¨¢«»]|Â[ §°]|â„¢")
 
 
+def call_args(text, open_paren):
+    """Source of the argument list of the call whose '(' is at open_paren.
+
+    Paren-balanced, so a nested call or a tuple argument does not truncate it.
+    Returns "" if the call is unterminated (a markdown fragment, typically).
+    """
+    depth = 0
+    for i in range(open_paren, len(text)):
+        c = text[i]
+        if c == "(":
+            depth += 1
+        elif c == ")":
+            depth -= 1
+            if depth == 0:
+                return text[open_paren + 1:i]
+    return ""
+
+
+def seeding_problems(code):
+    """Every stochastic entry point must be seeded explicitly.
+
+    A bare substring test for "seed" passes a notebook that calls
+    `default_rng()` with no argument and mentions the word seed in a comment,
+    which is exactly the failure this is meant to catch.
+    """
+    problems = []
+
+    def where(pos):
+        return code[:pos].count("\n") + 1
+
+    for m in re.finditer(r"\bdefault_rng\s*\(", code):
+        if not call_args(code, m.end() - 1).strip():
+            problems.append(f"unseeded default_rng() on code line {where(m.start())} "
+                            f"- pass SEED (see backends.seed_for)")
+
+    # Sampler/Estimator constructors. qviz.backends.sampler()/.estimator() seed
+    # for you, so a notebook that goes through those is clean by construction.
+    for m in re.finditer(r"\b(StatevectorSampler|StatevectorEstimator|SamplerV2"
+                         r"|EstimatorV2|BackendSamplerV2|BackendEstimatorV2)\s*\(", code):
+        name = m.group(1)
+        args = call_args(code, m.end() - 1)
+        if "Estimator" in name:
+            # Aer's EstimatorV2 takes no seed= at all; it is seeded through
+            # options={"backend_options": {"seed_simulator": N}}.
+            seeded = "seed" in args
+        else:
+            seeded = re.search(r"\bseed\s*=", args) is not None
+        if not seeded:
+            problems.append(f"unseeded {name}(...) on code line {where(m.start())} "
+                            f"- use qviz.backends.sampler()/.estimator()")
+
+    # transpile() only has stochastic passes (layout, routing) when it is given
+    # a target -- a backend positional or an explicit coupling_map.
+    for m in re.finditer(r"\btranspile\s*\(", code):
+        args = call_args(code, m.end() - 1)
+        if not args:
+            continue
+        targeted = ("coupling_map" in args
+                    or re.search(r"^[^,=]+,\s*[A-Za-z_][\w.]*(\(\))?\s*(,|$)", args.strip()))
+        if targeted and "seed_transpiler" not in args:
+            problems.append(f"transpile(...) with a target but no seed_transpiler "
+                            f"on code line {where(m.start())}")
+
+    return problems
+
+
 def sh(msg):
     print(msg, flush=True)
 
@@ -207,6 +273,7 @@ def lint(nb_id):
     if nb is not None:
         if "seed" not in code and "default_rng" not in code:
             problems.append("no seeding found - determinism is mandatory")
+        problems.extend(seeding_problems(code))
         if "style.use()" not in code:
             problems.append("missing `style.use()` - notebook will not match the repo look")
         n_out = sum(1 for c in nb.cells
