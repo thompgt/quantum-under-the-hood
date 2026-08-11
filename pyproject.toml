@@ -6,8 +6,15 @@ build-backend = "setuptools.build_meta"
 name = "quantum-under-the-hood"
 version = "0.1.0"
 description = "Shared drawing layer for the Quantum Under The Hood notebooks"
-requires-python = ">=3.11"
-dependencies = ["numpy", "matplotlib"]
+# The repo is developed, tested and CI'd on 3.13 against the pins in
+# requirements.txt; nothing here has been exercised on an older interpreter, so
+# do not widen this without running the gates on it.
+requires-python = ">=3.13"
+# Lower bounds only -- requirements.txt carries the exact pins the notebooks
+# were executed against. numpy 2.1 is the floor for the 2.x array API this uses;
+# matplotlib 3.9 is the floor for the constrained-layout behaviour qviz.style
+# depends on.
+dependencies = ["numpy>=2.1", "matplotlib>=3.9"]
 
 [tool.setuptools]
 packages = ["qviz"]
