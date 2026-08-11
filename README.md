@@ -265,7 +265,8 @@ The build gate fails on: any dead Qiskit API, a notebook with no figures, an
 unseeded RNG or primitive (`default_rng()` with no argument, an unseeded
 Sampler/Estimator, a targeted `transpile()` with no `seed_transpiler`), a cell
 that raised, a cross-notebook link that doesn't resolve on disk, or a file over
-2 MB.
+2 MB. It also runs `tools/check_style.py` first, which re-measures the two phase
+colormap properties claimed above (`--no-style` skips it).
 
 ---
 

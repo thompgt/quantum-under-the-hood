@@ -216,6 +216,20 @@ def execute(nb_id, timeout=900):
     return True, ""
 
 
+def style_gate():
+    """Run tools/check_style.py.
+
+    It validates the two phase-colormap properties the README states as measured
+    fact -- constant OKLab lightness across the cycle, and 3:1 contrast at every
+    phase. Nothing called it, so those numbers could have gone stale silently.
+    """
+    env = dict(os.environ, PYTHONUTF8="1", PYTHONIOENCODING="utf-8")
+    r = subprocess.run([sys.executable, str(ROOT / "tools" / "check_style.py")],
+                       cwd=str(ROOT), env=env, capture_output=True, text=True,
+                       encoding="utf-8", errors="replace")
+    return r.returncode == 0, ((r.stdout or "") + (r.stderr or "")).strip()
+
+
 def lint(nb_id):
     """Dead-API, seeding, tofu and output-presence gates."""
     import nbformat
@@ -303,6 +317,8 @@ def main():
     ap.add_argument("--lint-only", action="store_true")
     ap.add_argument("--no-exec", action="store_true")
     ap.add_argument("--timeout", type=int, default=900)
+    ap.add_argument("--no-style", action="store_true",
+                    help="skip the phase-colormap gate (tools/check_style.py)")
     args = ap.parse_args()
 
     ids = args.ids or notebook_ids()
@@ -311,6 +327,14 @@ def main():
         return 0
 
     failures = {}
+
+    if not args.no_style:
+        sh("=== style")
+        ok, out = style_gate()
+        for line in out.splitlines():
+            sh(f"  {line}")
+        if not ok:
+            failures["style"] = "colormap"
     for nb_id in ids:
         t0 = time.time()
         sh(f"=== {nb_id}")
