@@ -11,7 +11,13 @@ Code cells are raw strings (r'''...''') so that LaTeX in figure text and "\n"
 inside print() both survive verbatim into the notebook.
 """
 
+import sys
+from pathlib import Path as _Path
+
 import nbformat as nbf
+
+sys.path.insert(0, str(_Path(__file__).resolve().parent.parent))
+from nbmeta import notebook_metadata  # noqa: E402
 
 NB_ID = "A07"
 TITLE = "A Tiny Statevector Simulator"
@@ -1111,11 +1117,7 @@ have a simulator fast enough to run circuits worth watching. So let's point it a
 the thing that makes quantum computing work at all: amplitudes cancelling."""))
 
 nb = nbf.v4.new_notebook(cells=cells)
-nb.metadata = {
-    "kernelspec": {"display_name": "Python 3", "language": "python",
-                   "name": "python3"},
-    "language_info": {"name": "python", "version": "3.13.7"},
-}
+nb.metadata = notebook_metadata()
 
 if __name__ == "__main__":
     import pathlib

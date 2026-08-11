@@ -10,7 +10,13 @@ X, here is the SDK equivalent" -> derivation in visible code -> substantive
 figures -> honest limits -> cross-track Checkpoint.
 """
 
+import sys
+from pathlib import Path as _Path
+
 import nbformat as nbf
+
+sys.path.insert(0, str(_Path(__file__).resolve().parent.parent))
+from nbmeta import notebook_metadata  # noqa: E402
 
 NB_ID = "B17"
 OUT = f"notebooks/{NB_ID}_Multi_Qubit_Ordering.ipynb"
@@ -929,11 +935,7 @@ where the two-qubit states we can now index correctly turn out to be
 un-factorable — and we measure exactly how much."""))
 
 nb = nbf.v4.new_notebook(cells=cells)
-nb.metadata = {
-    "kernelspec": {"display_name": "Python 3", "language": "python",
-                   "name": "python3"},
-    "language_info": {"name": "python", "version": "3.13.7"},
-}
+nb.metadata = notebook_metadata()
 
 if __name__ == "__main__":
     import pathlib

@@ -8,7 +8,13 @@ Thesis: every single-qubit gate is a rotation of the Bloch sphere, and the 2x2
 matrix is just the algebra for that rotation.
 """
 
+import sys
+from pathlib import Path as _Path
+
 import nbformat as nbf
+
+sys.path.insert(0, str(_Path(__file__).resolve().parent.parent))
+from nbmeta import notebook_metadata  # noqa: E402
 
 NB_ID = "A03"
 TITLE = "Single-Qubit Gates as 2x2 Unitaries"
@@ -1101,11 +1107,7 @@ none of those things — it is the one operation in the theory that is not a
 rotation, and it is where the probabilities finally cash out."""))
 
 nb = nbf.v4.new_notebook(cells=cells)
-nb.metadata = {
-    "kernelspec": {"display_name": "Python 3", "language": "python",
-                   "name": "python3"},
-    "language_info": {"name": "python", "version": "3.13.7"},
-}
+nb.metadata = notebook_metadata()
 
 if __name__ == "__main__":
     import pathlib

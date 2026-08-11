@@ -3,7 +3,13 @@
 Track A: pure NumPy, no Qiskit. Structure follows tools/gen/gen_A01.py.
 """
 
+import sys
+from pathlib import Path as _Path
+
 import nbformat as nbf
+
+sys.path.insert(0, str(_Path(__file__).resolve().parent.parent))
+from nbmeta import notebook_metadata  # noqa: E402
 
 NB_ID = "A11"
 TITLE = "QFT and Phase Estimation From Scratch"
@@ -1129,11 +1135,7 @@ anything going wrong. A12 introduces the other kind of imperfection, the kind an
 amplitude vector cannot represent at all."""))
 
 nb = nbf.v4.new_notebook(cells=cells)
-nb.metadata = {
-    "kernelspec": {"display_name": "Python 3", "language": "python",
-                   "name": "python3"},
-    "language_info": {"name": "python", "version": "3.13.7"},
-}
+nb.metadata = notebook_metadata()
 
 if __name__ == "__main__":
     import pathlib

@@ -36,7 +36,13 @@ is: the oracle we build is a 2^n x 2^n lookup table, i.e. exponentially large in
 the bit-length of N. It demonstrates the interference, not the speedup.
 """
 
+import sys
+from pathlib import Path as _Path
+
 import nbformat as nbf
+
+sys.path.insert(0, str(_Path(__file__).resolve().parent.parent))
+from nbmeta import notebook_metadata  # noqa: E402
 
 NB_ID = "B24"
 TITLE = "Shor's Order Finding (N = 15, 21)"
@@ -1495,11 +1501,7 @@ replacement for the removed `.c_if`. Fidelity over 20 random states, and what
 "the state moved" does and does not mean."""))
 
 nb = nbf.v4.new_notebook(cells=cells)
-nb.metadata = {
-    "kernelspec": {"display_name": "Python 3", "language": "python",
-                   "name": "python3"},
-    "language_info": {"name": "python", "version": "3.13.7"},
-}
+nb.metadata = notebook_metadata()
 
 if __name__ == "__main__":
     import pathlib

@@ -303,7 +303,7 @@ regression test.
 notebooks/     A01..A12, B13..B24 — executed, outputs committed (B25..C30 planned)
 qviz/          shared DRAWING layer (style, bloch, grid, backends)
 tools/gen/     one generator per notebook — the source of truth
-tools/         build.py, smoke_gate.py, check_style.py, peek.py
+tools/         build.py, smoke_gate.py, check_style.py, peek.py, nbmeta.py
 ```
 
 `qviz/` may only *draw*. It never computes quantum mechanics on behalf of a Track

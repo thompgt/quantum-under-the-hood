@@ -9,7 +9,13 @@ Track B notebook:
   3. close with a cross-track assertion against the Track A result.
 """
 
+import sys
+from pathlib import Path as _Path
+
 import nbformat as nbf
+
+sys.path.insert(0, str(_Path(__file__).resolve().parent.parent))
+from nbmeta import notebook_metadata  # noqa: E402
 
 md = nbf.v4.new_markdown_cell
 code = nbf.v4.new_code_cell
@@ -388,11 +394,7 @@ cells.append(md(r"""---
 takes the five renderings above and works out when each one tells the truth."""))
 
 nb = nbf.v4.new_notebook(cells=cells)
-nb.metadata = {
-    "kernelspec": {"display_name": "Python 3", "language": "python",
-                   "name": "python3"},
-    "language_info": {"name": "python", "version": "3.13.7"},
-}
+nb.metadata = notebook_metadata()
 
 if __name__ == "__main__":
     import pathlib

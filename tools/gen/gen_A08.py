@@ -7,7 +7,13 @@ here is the backslash that lands in the notebook. Markdown cells are raw too,
 and never f-strings: LaTeX is full of braces.
 """
 
+import sys
+from pathlib import Path as _Path
+
 import nbformat as nbf
+
+sys.path.insert(0, str(_Path(__file__).resolve().parent.parent))
+from nbmeta import notebook_metadata  # noqa: E402
 
 NB_ID = "A08"
 TITLE = "Interference and Phase Kickback"
@@ -1071,11 +1077,7 @@ spends exactly one oracle query with them, and gets an answer no classical
 algorithm can get in fewer than two."""))
 
 nb = nbf.v4.new_notebook(cells=cells)
-nb.metadata = {
-    "kernelspec": {"display_name": "Python 3", "language": "python",
-                   "name": "python3"},
-    "language_info": {"name": "python", "version": "3.13.7"},
-}
+nb.metadata = notebook_metadata()
 
 if __name__ == "__main__":
     import pathlib

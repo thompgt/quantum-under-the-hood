@@ -35,7 +35,10 @@ WARN_BYTES = 900 * 1024
 
 # Kernel registered from the repo venv:
 #   .venv/Scripts/python -m ipykernel install --user --name quth
-KERNEL = os.environ.get("QUTH_KERNEL", "quth")
+# Shared with the generators, which stamp the same name into every notebook's
+# kernelspec -- see tools/nbmeta.py for why that matters.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from nbmeta import KERNEL  # noqa: E402
 
 # Dead Qiskit APIs. A hit anywhere in a notebook or generator fails the build --
 # this is the cheapest possible guard against the project's top failure mode.
